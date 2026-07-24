@@ -1,0 +1,26 @@
+# --- Secret: KHONG BAO GIO commit API key ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Node / VitePress ---
+node_modules/
+.vitepress/dist/
+.vitepress/cache/
+.vitepress/.temp/
+
+# --- Python (labs/) ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# --- He dieu hanh / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

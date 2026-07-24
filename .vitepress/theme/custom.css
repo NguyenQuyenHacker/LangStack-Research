@@ -1,0 +1,28 @@
+/* Tuỳ biến theme mặc định của VitePress. Đặt style riêng của bạn ở đây. */
+
+:root {
+  --vp-c-brand-1: #1a7f64;
+  --vp-c-brand-2: #17916f;
+  --vp-c-brand-3: #12b886;
+  --vp-c-brand-soft: rgba(26, 127, 100, 0.14);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #12b886, #4c6ef5);
+}
+
+.dark {
+  --vp-c-brand-1: #3ecf9a;
+  --vp-c-brand-2: #2fbf8b;
+  --vp-c-brand-3: #12b886;
+}
+
+/* Bảng trong note thường dài, cho phép cuộn ngang thay vì tràn trang */
+.vp-doc table {
+  display: block;
+  overflow-x: auto;
+}
+
+/* Blockquote cảnh báo "⚠️ Docs không nêu rõ..." theo CONVENTIONS.md */
+.vp-doc blockquote {
+  border-left-color: var(--vp-c-warning-1);
+}

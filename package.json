@@ -1,0 +1,16 @@
+{
+  "name": "langstack-research",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Research notes ve LangChain / LangGraph / Langfuse",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "vitepress": "^1.6.3"
+  }
+}

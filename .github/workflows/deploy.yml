@@ -1,0 +1,54 @@
+name: Deploy VitePress site to Pages
+
+on:
+  # Moi lan push len main la build va deploy lai
+  push:
+    branches: [main]
+  # Cho phep bam nut chay tay trong tab Actions
+  workflow_dispatch:
+
+# Quyen toi thieu de GITHUB_TOKEN deploy duoc len Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Neu push lien tuc, huy run cu dang chay va giu run moi nhat
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # can full history de lastUpdated lay dung ngay commit
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run docs:build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

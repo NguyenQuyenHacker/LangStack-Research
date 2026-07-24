@@ -24,9 +24,9 @@ Quy ước viết ở [`../CONVENTIONS.md`](../CONVENTIONS.md). Thuật ngữ �
 ### 03 — Harness
 - [03-01 Agents](03-harness/03-01-agents.md)
 - [03-02 Tools](03-harness/03-02-tools.md)
-- [03-03 Middleware — tổng quan](03-harness/03-03-middleware-overview.md)
-- [03-04 Middleware dựng sẵn](03-harness/03-04-middleware-built-in.md)
-- [03-05 Middleware tự viết](03-harness/03-05-middleware-custom.md)
+- [03-03 Middleware — tổng quan](03-harness/middleware/03-03-middleware-overview.md)
+- [03-04 Middleware dựng sẵn](03-harness/middleware/03-04-middleware-built-in.md)
+- [03-05 Middleware tự viết](03-harness/middleware/03-05-middleware-custom.md)
 - [03-06 Vòng đời hook](03-harness/03-06-hook-lifecycle.md)
 - [03-07 Guardrails](03-harness/03-07-guardrails.md)
 - [03-08 Human-in-the-loop](03-harness/03-08-human-in-the-loop.md)

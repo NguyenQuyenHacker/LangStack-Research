@@ -43,9 +43,9 @@ Toàn bộ những gì bao quanh model: vòng lặp agent, tools, middleware. Gu
 |---|---|---|---|
 | `03-01-agents.md` | `B`agents | `create_agent`, vòng lặp model → tool → model, điều kiện dừng | |
 | `03-02-tools.md` | `B`tools | Định nghĩa tool, schema tham số, xử lý lỗi khi tool fail | |
-| `03-03-middleware-overview.md` | `B`middleware/overview | Middleware là gì, chèn vào đâu trong vòng lặp | |
-| `03-04-middleware-built-in.md` | `B`middleware/built-in | Danh mục middleware có sẵn, mỗi cái giải quyết vấn đề gì | |
-| `03-05-middleware-custom.md` | `B`middleware/custom | Tự viết middleware, các hook được phép cài đặt | |
+| `middleware/03-03-middleware-overview.md` | `B`middleware/overview | Middleware là gì, chèn vào đâu trong vòng lặp | |
+| `middleware/03-04-middleware-built-in.md` | `B`middleware/built-in | Danh mục middleware có sẵn, mỗi cái giải quyết vấn đề gì | |
+| `middleware/03-05-middleware-custom.md` | `B`middleware/custom | Tự viết middleware, các hook được phép cài đặt | |
 | `03-06-hook-lifecycle.md` | [tổng hợp] + đọc source | Thứ tự thực thi hook, hành vi khi xếp chồng nhiều middleware — phần đào sâu nhất của nhóm | |
 | `03-07-guardrails.md` | `B`guardrails | Chặn input/output không hợp lệ; chỉ rõ nó là middleware ở dạng nào | |
 | `03-08-human-in-the-loop.md` | `B`human-in-the-loop | Dừng chờ người duyệt, cơ chế interrupt và resume | |

@@ -5,570 +5,509 @@ accessed: 2026-07-22
 lc_version: "1.x"
 status: draft
 lab:
-related:
-  - ./models.md
-  - ./tools.md
-  - ./streaming.md
-  - ./structured-output.md
-  - ./messages.md
 ---
 
 # Agents (`create_agent`)
 
-> `create_agent` là hàm dựng agent sẵn dùng của LangChain v1: ghép một model với một bộ tool rồi cho chạy vòng lặp cho tới khi đạt điều kiện dừng.
-> Nó dựng graph trên nền LangGraph, nên mọi phương thức của Graph API (`invoke`, `stream`) đều dùng được. Chi tiết từng thành phần nằm ở [models](./models.md), [tools](./tools.md), [structured-output](./structured-output.md).
+> Trang này định nghĩa agent và giới thiệu `create_agent` — một *harness* cấu hình được. Nó nêu bốn thành phần lõi, cách gọi agent, cách nhận tiến độ, và sáu nhóm năng lực mở rộng bằng middleware.
+> Trang cố tình viết ngắn: mỗi mục chỉ vài câu kèm một khối code rồi trỏ sang trang chuyên sâu. Note này giữ đúng độ sâu đó.
+
+> **Về các khối kết quả in ra.** Trang gốc không in kết quả cho khối code nào; chỗ duy nhất có là dòng chú thích `# Answer(summary=..., confidence=...)`. Ba khối kết quả trong file này tôi dựng lại từ mô tả của trang, đều gắn nhãn `(dựng lại)`. Cần đối chiếu khi chạy thử.
+>
+> Code trên trang có bảy tab theo nhà cung cấp model. Note này lấy tab Google; đổi chuỗi model là chạy được với nhà cung cấp khác.
 
 ---
 
+## 1. Tổng quan
 
-## 1. Agent là gì
+Agent là một model gọi tool trong một vòng lặp, cho tới khi nhiệm vụ được giao hoàn thành.
 
-### Là gì
+Cách trang này đóng khung vấn đề, và cũng là điểm khác so với cách nghĩ "agent = model thông minh hơn":
 
-Agent là model cộng với một bộ tool, chạy trong vòng lặp: model quyết định gọi tool nào, đọc kết quả trả về, rồi quyết định tiếp. Vòng lặp dừng khi model đưa ra câu trả lời cuối hoặc chạm giới hạn số vòng lặp.
+> **Agent = Model + Harness**
+>
+> Việc của harness: đưa cho model đúng bối cảnh, vào đúng lúc, cho nhiệm vụ đang làm.
 
-### Dùng để làm gì
+Harness là toàn bộ những gì bao quanh vòng lặp — model, prompt của nó, tool của nó, và mọi middleware định hình hành vi. Model chỉ là một mảnh; phần còn lại quyết định model nhìn thấy gì tại mỗi lượt.
 
-Giải quyết loại việc mà người viết code không biết trước cần bao nhiêu bước. Tra một sản phẩm rồi mới biết phải tra tiếp tồn kho hay không — cái đó model quyết lúc chạy, không phải mình viết cứng `if/else`.
-
-### Đoạn code ngắn nhất chạy được
+`create_agent` là một harness cấu hình được ở mức cao. Bản đơn giản nhất:
 
 ```python
 from langchain.agents import create_agent
 
-agent = create_agent("openai:gpt-5.4", tools=tools)
-
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]}
-)
+agent = create_agent(model="google_genai:gemini-3.5-flash", tools=tools)   # đủ để có một agent chạy được
 ```
 
-### Bên trong nó là một graph
-
-```
-        ┌──────────────┐
-  vào → │  model node  │ ── không gọi tool ──→ trả lời cuối → dừng
-        └──────┬───────┘
-               │ có tool call
-               ▼
-        ┌──────────────┐
-        │  tools node  │
-        └──────┬───────┘
-               │ kết quả tool đẩy ngược vào messages
-               └──────────────→ quay lại model node
-```
-
-Node là một bước, edge là đường nối. Middleware chen thêm node vào giữa các bước này. Doc không vẽ sơ đồ, phần hình trên là **suy luận** từ mô tả "the agent moves through this graph, executing nodes like the model node, the tools node, or middleware".
+Từ đó, ba tham số `model=`, `tools=`, `system_prompt=` lo phần cơ bản. Năng lực sâu hơn thì mở rộng harness bằng middleware (mục 5).
 
 ---
 
-## 2. Model — bộ phận suy luận
+## 2. Bảng tham số của `create_agent`
 
-Model là thứ quyết định gọi tool nào và khi nào dừng. Có hai cách chỉ định: cố định từ lúc tạo agent, hoặc chọn lúc chạy.
+Chỉ những tham số xuất hiện trên trang này.
 
-### 2.1 Static model — cố định
-
-**Là gì.** Khai báo một lần lúc tạo agent, không đổi trong suốt lượt chạy. Đây là cách phổ biến.
-
-**Hai lối khai báo:**
-
-| Lối | Code | Khi nào dùng |
+| Tham số | Nhận gì | Dùng để |
 |---|---|---|
-| Chuỗi định danh | `create_agent("openai:gpt-5.4", tools=tools)` | Chỉ cần chạy được, không cần chỉnh gì |
-| Instance của provider | `ChatOpenAI(model="gpt-5.4", temperature=0.1, ...)` | Cần chỉnh `temperature`, `max_tokens`, `timeout`, `base_url` |
-
-```python
-from langchain.agents import create_agent
-from langchain_openai import ChatOpenAI
-
-model = ChatOpenAI(
-    model="gpt-5.4",
-    temperature=0.1,
-    max_tokens=1000,
-    timeout=30,
-)
-agent = create_agent(model, tools=tools)
-```
-
-Chuỗi định danh tự suy ra provider: viết `"gpt-5.4"` thì hiểu là `"openai:gpt-5.4"`.
-
-### 2.2 Dynamic model — chọn lúc chạy
-
-**Là gì.** Model được chọn tại thời điểm chạy, dựa vào State và context hiện tại.
-
-**Dùng để làm gì.** Tiết kiệm tiền và định tuyến. Việc dễ giao model rẻ, việc khó mới đẩy lên model đắt.
-
-**Bài toán cụ thể.** Chatbot hỗ trợ khách. Vài câu đầu thường là câu hỏi đơn giản — dùng `gpt-5.4-mini`. Hội thoại kéo dài quá 10 lượt tức là vấn đề rắc rối — chuyển sang `gpt-5.4`.
-
-```python
-from langchain_openai import ChatOpenAI
-from langchain.agents import create_agent
-from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
-
-basic_model = ChatOpenAI(model="gpt-5.4-mini")
-advanced_model = ChatOpenAI(model="gpt-5.4")
-
-@wrap_model_call
-def dynamic_model_selection(request: ModelRequest, handler) -> ModelResponse:
-    message_count = len(request.state["messages"])
-    model = advanced_model if message_count > 10 else basic_model
-    return handler(request.override(model=model))
-
-agent = create_agent(
-    model=basic_model,      # model mặc định
-    tools=tools,
-    middleware=[dynamic_model_selection],
-)
-```
-
-Cách đọc đoạn này: `request` là yêu cầu sắp gửi cho model, `handler` là hành động gửi thật. `request.override(model=...)` tạo bản sao của yêu cầu với model khác, rồi mới đưa cho `handler`.
-
-**Bẫy doc nói rõ.** Model pre-bound (đã gọi `bind_tools`) không dùng được cùng structured output. Nếu vừa muốn đổi model động vừa muốn structured output, phải đưa model chưa bind vào middleware.
+| `model` | chuỗi `"nhà_cung_cấp:model"`, hoặc một bản model đã khởi tạo | Chọn model |
+| `tools` | danh sách callable Python, tool của LangChain, hoặc tool dạng dict | Cho agent khả năng hành động |
+| `system_prompt` | `str` hoặc `SystemMessage` | Định hình cách agent tiếp cận nhiệm vụ |
+| `response_format` | một schema (ví dụ lớp Pydantic) | Ép agent trả về dữ liệu đã kiểm tra theo schema |
+| `checkpointer` | ví dụ `InMemorySaver()` | Điều kiện để `thread_id` giữ được lịch sử hội thoại |
+| `context_schema` | dataclass | Khai hình dạng dữ liệu truyền theo từng lần chạy |
+| `middleware` | danh sách middleware | Mở rộng harness (mục 5) |
+| `name` | `str` | Định danh agent khi nhúng làm agent con |
 
 ---
 
-## 3. Tools — bộ phận hành động
+## 3. Bốn thành phần lõi
 
-Doc liệt kê 5 thứ agent làm được mà model gắn tool trần không làm được:
+### 3.1 Model
 
-- gọi nhiều tool nối tiếp nhau chỉ từ một câu hỏi
-- gọi song song khi hợp lý
-- chọn tool tiếp theo dựa vào kết quả tool trước
-- thử lại và xử lý lỗi tool
-- giữ State xuyên suốt các lần gọi tool
+**Khái niệm.** Model được chọn bằng một chuỗi định danh dạng `"nhà_cung_cấp:model"`, hoặc bằng một bản model đã khởi tạo sẵn.
 
-### 3.1 Static tools — cố định
-
-**Là gì.** Danh sách tool đưa vào lúc tạo agent, không đổi.
-
-Tool là hàm Python thường (hoặc coroutine), bọc bằng decorator `@tool`. Docstring của hàm chính là phần mô tả model đọc để biết khi nào nên gọi — viết docstring cẩu thả thì model gọi sai.
+**Vai trò.** Đây là phần suy luận của agent. Chuỗi định danh đủ cho phần lớn trường hợp; cần chỉnh tham số của model thì truyền bản đã khởi tạo.
 
 ```python
-from langchain.tools import tool
 from langchain.agents import create_agent
 
-@tool
+agent = create_agent(model="google_genai:gemini-3.5-flash", tools=tools)
+```
+
+Tham số của model, cách khai báo nhà cung cấp và cách chọn model động đều nằm ở trang Models, không thuộc trang này.
+
+### 3.2 Tools
+
+**Khái niệm.** Truyền cho agent bất kỳ callable Python nào, một tool của LangChain, hoặc một tool dạng dict.
+
+**Vai trò.** Tool là chỗ agent chạm được vào thế giới bên ngoài. Không có tool thì agent chỉ sinh chữ.
+
+```python
+from langchain.agents import create_agent
+from langchain.tools import tool
+
+
+@tool                                                    # decorator biến hàm thường thành tool
 def search(query: str) -> str:
-    """Search for information."""
+    """Search for information."""                        # docstring là mô tả model đọc để quyết định gọi
     return f"Results for: {query}"
 
-@tool
-def get_weather(location: str) -> str:
-    """Get weather information for a location."""
-    return f"Weather in {location}: Sunny, 72°F"
 
-agent = create_agent(model, tools=[search, get_weather])
+agent = create_agent(model="google_genai:gemini-3.5-flash", tools=[search])
 ```
 
-Truyền danh sách rỗng thì agent thu về đúng một node LLM, không còn khả năng gọi tool.
+Cách định nghĩa tool, cách tool đọc bối cảnh, và cách chọn tool động nằm ở trang Tools.
 
-### 3.2 Dynamic tools — đổi bộ tool lúc chạy
+### 3.3 System prompt
 
-**Vì sao cần.** Nhồi quá nhiều tool thì model rối và gọi sai; để quá ít thì agent làm được ít việc. Bộ tool nên co giãn theo trạng thái đăng nhập, quyền của user, feature flag, hoặc giai đoạn hội thoại.
+**Khái niệm.** Tham số nhận một chuỗi hoặc một `SystemMessage`.
 
-Doc chia làm hai nhánh, khác nhau ở chỗ **đã biết trước danh sách tool hay chưa**.
-
-#### Nhánh A — Lọc bộ tool đã đăng ký sẵn
-
-Đăng ký hết vào `create_agent`, rồi mỗi lượt gọi model thì lọc bớt trước khi gửi. Nguồn để lọc có ba, đây là chỗ dễ lẫn nhất của trang này:
-
-| Nguồn | Đọc bằng | Dữ liệu sống bao lâu | Ví dụ dùng để lọc |
-|---|---|---|---|
-| **State** | `request.state` | Trong một lượt chạy | Đã xác thực chưa, hội thoại đã dài chưa |
-| **Store** | `request.runtime.store` | Lâu dài, xuyên phiên | User này được bật những tính năng nào |
-| **Runtime Context** | `request.runtime.context` | Do người gọi truyền vào lúc `invoke` | Vai trò: admin / editor / viewer |
-
-Lọc theo State — chỉ mở tool nhạy cảm sau khi đăng nhập:
-
-```python
-@wrap_model_call
-def state_based_tools(request: ModelRequest, handler) -> ModelResponse:
-    state = request.state
-    is_authenticated = state.get("authenticated", False)
-    message_count = len(state["messages"])
-
-    if not is_authenticated:
-        tools = [t for t in request.tools if t.name.startswith("public_")]
-        request = request.override(tools=tools)
-    elif message_count < 5:
-        tools = [t for t in request.tools if t.name != "advanced_search"]
-        request = request.override(tools=tools)
-
-    return handler(request)
-
-agent = create_agent(
-    model="gpt-5.4",
-    tools=[public_search, private_search, advanced_search],
-    middleware=[state_based_tools],
-)
-```
-
-Lọc theo Runtime Context — phân quyền:
-
-```python
-@dataclass
-class Context:
-    user_role: str
-
-@wrap_model_call
-def context_based_tools(request: ModelRequest, handler) -> ModelResponse:
-    if request.runtime is None or request.runtime.context is None:
-        user_role = "viewer"          # không có context thì lấy quyền thấp nhất
-    else:
-        user_role = request.runtime.context.user_role
-
-    if user_role == "admin":
-        pass                           # admin giữ nguyên toàn bộ tool
-    elif user_role == "editor":
-        tools = [t for t in request.tools if t.name != "delete_data"]
-        request = request.override(tools=tools)
-    else:
-        tools = [t for t in request.tools if t.name.startswith("read_")]
-        request = request.override(tools=tools)
-
-    return handler(request)
-
-agent = create_agent(
-    model="gpt-5.4",
-    tools=[read_data, write_data, delete_data],
-    middleware=[context_based_tools],
-    context_schema=Context,
-)
-```
-
-Bản lọc theo Store dùng cùng khuôn, chỉ khác chỗ lấy dữ liệu: `request.runtime.store.get(("features",), user_id)`.
-
-Hợp với trường hợp: biết hết tool từ lúc khởi động, chỉ cần bật/tắt theo quyền hoặc trạng thái.
-
-#### Nhánh B — Đăng ký tool ngay lúc chạy
-
-Dùng khi tool chỉ xuất hiện lúc chạy: nạp từ MCP server, sinh ra từ dữ liệu của user, lấy từ registry ở xa.
-
-Nhánh này cần **hai** hook, không phải một:
-
-1. `wrap_model_call` — nhét tool mới vào yêu cầu để model biết nó tồn tại
-2. `wrap_tool_call` — dạy agent cách chạy tool đó khi model gọi tới
-
-```python
-class DynamicToolMiddleware(AgentMiddleware):
-    def wrap_model_call(self, request: ModelRequest, handler):
-        updated = request.override(tools=[*request.tools, calculate_tip])
-        return handler(updated)
-
-    def wrap_tool_call(self, request: ToolCallRequest, handler):
-        if request.tool_call["name"] == "calculate_tip":
-            return handler(request.override(tool=calculate_tip))
-        return handler(request)
-
-agent = create_agent(
-    model="gpt-4o",
-    tools=[get_weather],          # chỉ tool tĩnh đăng ký ở đây
-    middleware=[DynamicToolMiddleware()],
-)
-```
-
-Thiếu `wrap_tool_call` thì model gọi được tên tool nhưng agent không biết chạy hàm nào. Doc nhấn mạnh chỗ này.
-
-**Chốt hai nhánh:**
-
-| | Nhánh A — lọc | Nhánh B — đăng ký lúc chạy |
-|---|---|---|
-| Tool có sẵn từ đầu? | Có | Không |
-| Hook cần dùng | `wrap_model_call` | `wrap_model_call` + `wrap_tool_call` |
-| Tình huống điển hình | Phân quyền, feature flag | MCP server, tool sinh động |
-
-### 3.3 Xử lý lỗi tool
-
-Bọc bằng `@wrap_tool_call`, bắt exception rồi trả về `ToolMessage` chứa lời nhắn cho model thay vì để agent chết.
-
-```python
-@wrap_tool_call
-def handle_tool_errors(request, handler):
-    try:
-        return handler(request)
-    except Exception as e:
-        return ToolMessage(
-            content=f"Tool error: Please check your input and try again. ({str(e)})",
-            tool_call_id=request.tool_call["id"],
-        )
-```
-
-Kết quả nằm trong dòng messages:
-
-```
-ToolMessage(
-    content="Tool error: Please check your input and try again. (division by zero)",
-    tool_call_id="..."
-)
-```
-
-Model đọc được câu này và có cơ hội thử lại với đầu vào khác.
-
-### 3.4 Vòng lặp ReAct trông như thế nào
-
-Prompt: tìm tai nghe không dây đang phổ biến nhất và kiểm tra còn hàng không.
-
-```
-================================ Human Message =================================
-Find the most popular wireless headphones right now and check if they're in stock
-```
-
-Nghĩ: độ phổ biến thay đổi theo thời gian, phải tra. Làm: gọi `search_products`.
-
-```
-================================== Ai Message ==================================
-Tool Calls:
-  search_products (call_abc123)
-  Args:
-    query: wireless headphones
-
-================================= Tool Message =================================
-Found 5 products matching "wireless headphones". Top 5 results: WH-1000XM5, ...
-```
-
-Nghĩ: chưa biết còn hàng không. Làm: gọi `check_inventory`.
-
-```
-================================== Ai Message ==================================
-Tool Calls:
-  check_inventory (call_def456)
-  Args:
-    product_id: WH-1000XM5
-
-================================= Tool Message =================================
-Product WH-1000XM5: 10 units in stock
-```
-
-Nghĩ: đủ dữ kiện. Làm: trả lời.
-
-```
-================================== Ai Message ==================================
-I found wireless headphones (model WH-1000XM5) with 10 units in stock...
-```
-
-Hai vòng lặp, hai lần model tự quyết. Không có dòng `if` nào của người viết code trong đó.
-
----
-
-## 4. System prompt
-
-**Là gì.** Câu chỉ dẫn định hình cách agent tiếp cận công việc. Truyền qua tham số `system_prompt`, nhận `str` hoặc `SystemMessage`.
-
-Không truyền thì agent tự đoán việc phải làm từ đám messages.
+**Vai trò.** Định hình cách agent tiếp cận nhiệm vụ.
 
 ```python
 agent = create_agent(
-    model,
-    tools,
+    model="google_genai:gemini-3.5-flash",
+    tools=tools,
     system_prompt="You are a helpful assistant. Be concise and accurate.",
 )
 ```
 
-Dùng `SystemMessage` khi cần các tính năng riêng của provider. Ví dụ prompt caching của Anthropic: đánh dấu `cache_control` cho khối văn bản dài để lần gọi sau không phải trả tiền và chờ xử lý lại từ đầu.
+Prompt sinh ra lúc chạy thì dùng middleware — trang này chỉ đặt link, không mô tả cách làm.
+
+### 3.4 Structured output
+
+**Khái niệm.** Tham số `response_format=` nhận một schema; agent trả về dữ liệu đã được kiểm tra theo schema đó.
+
+**Vai trò.** Đầu ra vào thẳng hệ thống khác thay vì phải bóc tách từ văn bản tự do.
+
+**Áp dụng thực tế.** Agent đọc bản tin thị trường rồi đẩy kết quả vào một bảng theo dõi: cần đúng hai trường tóm tắt và mức tin cậy, không cần đoạn văn.
 
 ```python
-literary_agent = create_agent(
-    model="google_genai:gemini-3.1-pro-preview",
-    system_prompt=SystemMessage(
-        content=[
-            {"type": "text", "text": "You are an AI assistant tasked with analyzing literary works."},
-            {
-                "type": "text",
-                "text": "<the entire contents of 'Pride and Prejudice'>",
-                "cache_control": {"type": "ephemeral"},
-            },
-        ]
-    ),
-)
+from pydantic import BaseModel
+from langchain.agents import create_agent
+
+
+class Answer(BaseModel):                                 # schema mô tả hình dạng dữ liệu cần lấy
+    summary: str
+    confidence: float
+
+
+agent = create_agent(model="google_genai:gemini-3.5-flash", tools=tools, response_format=Answer)
+result = agent.invoke({"messages": [{"role": "user", "content": "Summarize AI trends"}]})
+result["structured_response"]                            # dữ liệu có cấu trúc nằm ở khóa riêng, không ở messages
 ```
 
-### Dynamic system prompt
+**Kết quả in ra:**
 
-**Dùng để làm gì.** Đổi lời chỉ dẫn theo người dùng thay vì viết một prompt chung chung cho tất cả.
-
-**Bài toán cụ thể.** Cùng câu hỏi "explain machine learning", user đánh dấu `expert` cần câu trả lời kỹ thuật, user `beginner` cần giải thích không thuật ngữ.
-
-```python
-@dynamic_prompt
-def user_role_prompt(request: ModelRequest) -> str:
-    user_role = request.runtime.context.get("user_role", "user")
-    base_prompt = "You are a helpful assistant."
-
-    if user_role == "expert":
-        return f"{base_prompt} Provide detailed technical responses."
-    elif user_role == "beginner":
-        return f"{base_prompt} Explain concepts simply and avoid jargon."
-    return base_prompt
-
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "Explain machine learning"}]},
-    context={"user_role": "expert"},
-)
 ```
+Answer(summary=..., confidence=...)     ← đối tượng Python đã kiểm tra theo schema, dùng được ngay
+```
+
+Các chiến lược sinh đầu ra có cấu trúc nằm ở trang Structured output.
 
 ---
 
-## 5. Name
+## 4. Gọi agent
 
-Đặt tên agent bằng tham số `name`. Tên này dùng làm định danh node khi agent bị nhét vào hệ multi-agent như một subgraph.
+### 4.1 Gọi kèm `thread_id`
 
-```python
-agent = create_agent(model, tools, name="research_assistant")
-```
+**Khái niệm.** Gọi agent bằng một message. Bên dưới, message đó là một bản cập nhật vào trạng thái của agent. Kèm theo là `thread_id` để agent lưu lại và nối tiếp được lịch sử hội thoại.
 
-Viết `snake_case`. Tên có dấu cách hoặc ký tự lạ bị một số provider từ chối thẳng. Quy tắc này áp cho cả tên tool.
-
----
-
-## 6. Gọi agent
-
-Gọi bằng cách đẩy một cập nhật vào State. Mọi agent đều có `messages` trong State, nên đẩy message mới là đủ:
+**Vai trò.** Không có `thread_id`, mỗi lần gọi là một cuộc nói chuyện mới. Có `thread_id`, lượt sau biết lượt trước đã nói gì.
 
 ```python
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]}
-)
-```
-
-Agent tuân theo Graph API của LangGraph nên dùng được cả `stream` và các phương thức khác.
-
----
-
-## 7. Structured output
-
-Ép agent trả về đúng khuôn dữ liệu, khai báo qua tham số `response_format`. Hai chiến lược:
-
-| | `ToolStrategy` | `ProviderStrategy` |
-|---|---|---|
-| Cách làm | Dựng một tool giả, model "gọi" tool đó để nộp dữ liệu | Dùng tính năng structured output có sẵn của provider |
-| Điều kiện | Model biết gọi tool là được | Provider phải hỗ trợ |
-| Độ tin cậy | Thấp hơn | Cao hơn |
-
-```python
-class ContactInfo(BaseModel):
-    name: str
-    email: str
-    phone: str
+from langchain.agents import create_agent
+from langchain_core.utils.uuid import uuid7
+from langgraph.checkpoint.memory import InMemorySaver
 
 agent = create_agent(
-    model="gpt-5.4-mini",
-    tools=[search_tool],
-    response_format=ToolStrategy(ContactInfo),
+    model="google_genai:gemini-3.5-flash",
+    tools=[],
+    checkpointer=InMemorySaver(),                        # thiếu dòng này thì thread_id không giữ được gì
 )
 
-result["structured_response"]
-# ContactInfo(name='John Doe', email='john@example.com', phone='(555) 123-4567')
+config = {"configurable": {"thread_id": str(uuid7())}}   # thread_id nằm trong config, không phải tham số riêng
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]},
+    config=config,
+)
+
+# A follow-up turn on the same conversation: reuse the same thread_id to keep history
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What about tomorrow?"}]},
+    config=config,                                       # dùng lại đúng config nên agent hiểu "tomorrow" của cái gì
+)
 ```
 
-Từ `langchain 1.0`, truyền thẳng schema (`response_format=ContactInfo`) thì thư viện tự chọn `ProviderStrategy` nếu provider hỗ trợ, không thì lùi về `ToolStrategy`. Nói cách khác, phần lớn trường hợp không phải chọn tay.
+**Kết quả in ra** (dựng lại):
 
-Chi tiết hai chiến lược xem [structured-output](./structured-output.md).
+```
+{'messages': [...]}     ← trả về toàn bộ trạng thái; lượt hai chứa cả lịch sử lượt một
+```
+
+**!Note:** Giữ lịch sử bằng `thread_id` đòi hỏi agent phải có checkpointer. Chạy trên LangSmith thì checkpointer được cấp tự động; chạy tại máy thì phải truyền tay, ví dụ `create_agent(..., checkpointer=InMemorySaver())`. Quên thì code vẫn chạy, chỉ là mỗi lượt agent không nhớ gì.
+
+### 4.2 Gọi kèm `context`
+
+**Khái niệm.** Dữ liệu cấu hình riêng cho từng lần chạy — mã người dùng, khóa API, cờ tính năng — truyền qua `context`, đi cùng `config`. Hình dạng của nó khai bằng `context_schema`, và tool cùng middleware đọc nó qua `runtime.context`.
+
+**Vai trò.** Có những thứ không thuộc về nội dung hội thoại nhưng tool vẫn cần biết. Nhét chúng vào message là làm bẩn hội thoại; để trong `context` thì tách bạch.
+
+**Áp dụng thực tế.** Cùng một agent phục vụ nhiều chuyên viên; tool tra cứu phải biết người đang hỏi là ai để lọc đúng danh mục khách hàng họ phụ trách.
+
+```python
+from dataclasses import dataclass
+
+from langchain.agents import create_agent
+from langchain_core.utils.uuid import uuid7
+from langgraph.checkpoint.memory import InMemorySaver
+
+
+@dataclass
+class Context:                                           # khai trước hình dạng dữ liệu bối cảnh
+    user_id: str
+
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[],
+    context_schema=Context,                              # gắn schema vào agent
+    checkpointer=InMemorySaver(),
+)
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]},
+    config={"configurable": {"thread_id": str(uuid7())}},
+    context=Context(user_id="user-123"),                 # truyền lúc gọi, không phải lúc dựng agent
+)
+```
+
+### 4.3 Phân biệt `thread_id` và `context`
+
+| | `thread_id` | `context` |
+|---|---|---|
+| Khoanh vùng cái gì | Cuộc hội thoại: lịch sử message, checkpoint | Từng lần chạy |
+| Chứa gì | Nội dung đã trao đổi | Mã người dùng, khóa API, cờ tính năng |
+| Ai đọc | Bản thân agent | Tool và middleware, qua `runtime.context` |
+| Truyền ở đâu | Trong `config` | Tham số `context` |
+
+Hai thứ này thường đi cùng nhau. Chi tiết nằm ở trang Tools (mục bối cảnh của tool) và trang Runtime.
 
 ---
 
-## 8. Memory — State tuỳ biến
+## 5. Streaming — hiện tiến độ giữa chừng
 
-Agent tự giữ lịch sử hội thoại trong `messages`. Muốn nhớ thêm thứ khác thì mở rộng State — đây là **trí nhớ ngắn hạn**, sống trong phạm vi một lượt chạy.
+**Khái niệm.** `invoke` chỉ trả về kết quả cuối, khi cả lần chạy đã xong. Streaming đẩy ra message trung gian và hoạt động của tool ngay khi chúng xảy ra.
 
-State tuỳ biến bắt buộc kế thừa `AgentState` và phải là `TypedDict`.
-
-**Hai cách khai báo, doc ưu tiên cách 1:**
+**Vai trò.** Agent gọi nhiều tool thì lần chạy kéo dài; người dùng cần thấy tiến độ trước khi có kết quả cuối.
 
 ```python
-# Cách 1 — qua middleware (ưu tiên)
-class CustomState(AgentState):
-    user_preferences: dict
+from langchain.messages import AIMessage, HumanMessage
 
-class CustomMiddleware(AgentMiddleware):
-    state_schema = CustomState
-    tools = [tool1, tool2]
 
-    def before_model(self, state: CustomState, runtime) -> dict[str, Any] | None:
-        ...
-
-agent = create_agent(model, tools=tools, middleware=[CustomMiddleware()])
-```
-
-```python
-# Cách 2 — qua state_schema (lối tắt, chỉ khi State chỉ dùng cho tool)
-agent = create_agent(model, tools=[tool1, tool2], state_schema=CustomState)
-```
-
-Lý do doc ưu tiên cách 1: State mở rộng nằm chung chỗ với middleware và tool dùng nó, không vương vãi ra ngoài. Cách 2 giữ lại để tương thích ngược.
-
-**Đổi từ v1.0:** State tuỳ biến bắt buộc là `TypedDict`. Pydantic model và dataclass không còn dùng được — tài liệu cũ trên mạng viết theo lối cũ sẽ lỗi.
-
-Trí nhớ dài hạn xuyên phiên là chuyện khác, xem long-term memory.
-
----
-
-## 9. Streaming
-
-`invoke` chỉ trả kết quả cuối. Agent chạy nhiều bước thì phải chờ lâu, không thấy gì. `stream` đẩy từng chặng ra ngay khi có.
-
-```python
-for chunk in agent.stream(
+stream = agent.stream_events(
     {"messages": [{"role": "user", "content": "Search for AI news and summarize the findings"}]},
-    stream_mode="values",
-):
-    latest_message = chunk["messages"][-1]
-    ...
+    version="v3",                                                # bắt buộc ghi rõ phiên bản
+)
+for snapshot in stream.values:                                   # mỗi snapshot là toàn bộ trạng thái tại thời điểm đó
+    latest_message = snapshot["messages"][-1]                    # lấy message mới nhất
+    if latest_message.content:
+        if isinstance(latest_message, HumanMessage):
+            print(f"User: {latest_message.content}")
+        elif isinstance(latest_message, AIMessage):
+            print(f"Agent: {latest_message.content}")
+    elif latest_message.tool_calls:                              # content rỗng thì đây là lượt gọi tool
+        print(f"Calling tools: {[tc['name'] for tc in latest_message.tool_calls]}")
 ```
 
-`stream_mode="values"` trả về **toàn bộ State** tại mỗi chặng, nên phải tự lấy `messages[-1]` để biết vừa có gì mới. Chi tiết các stream_mode xem [streaming](./streaming.md).
+**Kết quả in ra** (dựng lại):
+
+```
+User: Search for AI news and summarize the findings     ← snapshot đầu, trạng thái mới chỉ có câu hỏi
+Calling tools: ['search']                               ← lượt model không có content nên rơi vào nhánh tool_calls
+Agent: Here are the main AI news items ...              ← lượt cuối có content, lần chạy kết thúc
+```
+
+Vì mỗi snapshot chứa trạng thái đầy đủ chứ không phải phần chênh lệch, đoạn code trên luôn lấy phần tử cuối của `messages` thay vì tự ghép dần.
+
+Các chế độ stream, loại sự kiện và cách dựng giao diện nằm ở trang Streaming.
 
 ---
 
-## 10. Middleware — bảng các hook xuất hiện trong trang này
+## 6. Cấu hình harness bằng middleware
 
-| Hook | Chen vào chỗ nào | Trang này dùng để |
-|---|---|---|
-| `@wrap_model_call` | Bọc lần gọi model | Đổi model động, lọc tool, nhét tool mới |
-| `@wrap_tool_call` | Bọc lần chạy tool | Bắt lỗi tool, chạy tool đăng ký lúc chạy |
-| `@dynamic_prompt` | Sinh system prompt | Đổi prompt theo vai trò user |
-| `@before_model` | Trước khi gọi model | Cắt bớt message, chèn context |
-| `@after_model` | Sau khi model trả lời | Guardrail, lọc nội dung |
+Middleware là đơn vị mở rộng của `create_agent`: mỗi mảnh lo đúng một việc, cắm vào vòng lặp agent tại đúng thời điểm, và ghép tự do với mảnh khác. Lấy đúng thứ cần, bỏ phần còn lại.
 
-Middleware chen vào luồng chạy mà không phải sửa lõi agent. Danh sách đầy đủ nằm ở trang Middleware.
+Những mẫu hay gặp đã được dựng sẵn thành middleware hạng nhất. Ngoài ra thì tự viết middleware riêng.
+
+Thời điểm từng móc kích hoạt và cách chồng middleware hoạt động thuộc trang Middleware overview — trang này chỉ liệt kê năng lực theo sáu nhóm.
+
+`create_deep_agent` lắp sẵn cả chồng này cho việc lập trình và nghiên cứu chạy dài, mặc định gồm filesystem, tóm tắt, agent con và prompt caching.
+
+### 6.1 Môi trường thi hành
+
+**Khái niệm.** Không gian làm việc của agent: tool để gọi, một filesystem để đọc ghi file xuyên qua các lượt, và khả năng chạy script hoặc lệnh shell.
+
+**Vai trò.** Agent hữu ích khi làm được việc chứ không chỉ sinh chữ. Filesystem còn giải quyết chuyện dữ liệu quá dài: ghi ra file rồi đọc lại, thay vì nhồi hết vào hội thoại.
+
+```python
+from langchain.agents import create_agent
+from deepagents.backends import StateBackend
+from deepagents.middleware import FilesystemMiddleware
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[search],
+    middleware=[FilesystemMiddleware(backend=StateBackend())],   # backend quyết định file nằm ở đâu
+)
+```
+
+**!Note:** Khối code này nhập từ `deepagents`, không phải `langchain`. Đây là gói riêng, và `search` trong ví dụ là biến đã có từ trước, trang không khai lại.
+
+Xem thêm `FilesystemMiddleware`, Sandboxes, Interpreters.
+
+### 6.2 Quản trị bối cảnh
+
+**Khái niệm.** Ba việc khác nhau nhằm giữ cửa sổ bối cảnh không tràn: tóm tắt nén lịch sử lại trước khi tràn; memory nạp chỉ dẫn cố định lúc khởi động để kiến thức đi xuyên các phiên; skills đưa kiến thức chuyên môn ra khi cần thay vì nạp hết từ đầu.
+
+**Vai trò.** Mỗi lần gọi model có một cửa sổ bối cảnh cố định. Agent chạy càng lâu, cửa sổ càng đầy lịch sử, kết quả tool và các bước trung gian.
+
+```python
+from deepagents.backends import StateBackend
+from deepagents.middleware import FilesystemMiddleware, MemoryMiddleware, SkillsMiddleware, SummarizationMiddleware
+
+backend = StateBackend()
+model="google_genai:gemini-3.5-flash"
+
+agent = create_agent(
+    model=model,
+    tools=[search],
+    middleware=[
+        FilesystemMiddleware(backend=backend),                       # nơi đọc ghi file
+        SummarizationMiddleware(model=model, backend=backend),       # tóm tắt cũng cần một model để chạy
+        MemoryMiddleware(backend=backend, sources=["./AGENTS.md"]),  # chỉ dẫn cố định lấy từ file
+        SkillsMiddleware(backend=backend, sources=["./skills/"]),    # kiến thức chuyên môn lấy từ thư mục
+    ],
+)
+```
+
+Bốn middleware dùng chung một `backend`, nên phải tạo biến `backend` trước rồi truyền lại cho từng cái.
+
+Xem thêm `SummarizationMiddleware`, `MemoryMiddleware`, Skills, Context engineering.
+
+### 6.3 Lập kế hoạch và giao việc
+
+**Khái niệm.** Agent chính chia nhỏ công việc, giao cho các agent con, mỗi agent con chạy trong bối cảnh riêng biệt của nó.
+
+**Vai trò.** Nhiệm vụ phức tạp thường vượt quá sức chứa của một cửa sổ bối cảnh. Giao việc giúp agent chính tập trung điều phối thay vì tự làm; việc chạy song song được, và bối cảnh của agent chính không bị bẩn.
+
+```python
+from deepagents.backends import StateBackend
+from deepagents.middleware import FilesystemMiddleware
+from deepagents.middleware.subagents import SubAgentMiddleware
+from langchain.agents import create_agent
+from langchain.agents.middleware import TodoListMiddleware
+from langchain.tools import tool
+
+
+@tool
+def search(query: str) -> str:
+    """Search for a query and return a short summary."""
+    return f"Search results for: {query}"
+
+
+backend = StateBackend()
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[search],
+    middleware=[
+        FilesystemMiddleware(backend=backend),
+        TodoListMiddleware(),                                # danh sách việc cần làm của agent chính
+        SubAgentMiddleware(
+            backend=backend,
+            subagents=[
+                {
+                    "name": "researcher",                    # tên agent con
+                    "description": "Searches and returns a structured summary.",   # agent chính đọc mô tả này để biết khi nào giao việc
+                    "system_prompt": "Use the search tool to research the question and summarize key points.",
+                    "tools": [search],                       # agent con có bộ tool riêng
+                    "model": "anthropic:claude-sonnet-4-6",  # và model riêng, khác agent chính
+                    "middleware": [],
+                }
+            ],
+        ),
+    ],
+)
+```
+
+Agent con khai bằng dict, mỗi cái tự chọn model, tool, prompt và middleware của nó.
+
+Xem thêm Subagents.
+
+### 6.4 Đặt tên agent
+
+**Khái niệm.** Một định danh tùy chọn cho agent.
+
+**Vai trò.** Cần đến khi nhúng agent làm quy trình con trong hệ nhiều agent.
+
+```python
+agent = create_agent(model="google_genai:gemini-3.5-flash", tools=tools, name="research_assistant")
+```
+
+### 6.5 Chịu lỗi
+
+**Khái niệm.** Middleware xử lý các hỏng hóc ở tầng hạ tầng: chạm giới hạn tần suất gọi, model hết thời gian chờ, lỗi API thoáng qua.
+
+**Vai trò.** Những lỗi này hiếm khi xuất hiện lúc phát triển nhưng gặp thường xuyên khi chạy thật. Đưa chúng về tầng hạ tầng thì tool và logic nghiệp vụ không phải bọc `try/catch` quanh từng lệnh gọi.
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelRetryMiddleware, ToolRetryMiddleware
+from langchain.tools import tool
+
+
+@tool
+def search(query: str) -> str:
+    """Search for a query and return a short summary."""
+    return f"Search results for: {query}"
+
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[search],
+    middleware=[
+        ModelRetryMiddleware(max_retries=3),                 # thử lại khi lỗi đến từ phía model
+        ToolRetryMiddleware(max_retries=2),                  # thử lại khi lỗi đến từ phía tool
+    ],
+)
+```
+
+Hai loại lỗi tách riêng nên số lần thử lại đặt riêng cho từng bên.
+
+Xem thêm `ModelRetryMiddleware`, `ToolRetryMiddleware`, Prebuilt middleware.
+
+### 6.6 Guardrails
+
+**Khái niệm.** Middleware chặn dữ liệu trên đường nó chảy qua vòng lặp agent, áp quy tắc tuân thủ hoặc chính sách nội dung trước khi kết quả tool chạm tới bối cảnh của model.
+
+**Vai trò.** Có những quy định không thể để trong prompt — chúng phải được thi hành một cách xác định, bất kể model làm gì. Prompt là lời dặn, model có thể lơ; guardrail là chốt chặn.
+
+**Áp dụng thực tế.** Kết quả tool kéo về từ hệ thống nội bộ có kèm địa chỉ email cá nhân của người liên hệ. Che ở tầng guardrail thì dữ liệu đó không bao giờ đi vào bối cảnh model, không phụ thuộc vào việc prompt có dặn hay không.
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import PIIMiddleware
+from langchain.tools import tool
+
+
+@tool
+def search(query: str) -> str:
+    """Search for a query and return a short summary."""
+    return f"Search results for: {query}"
+
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[search],
+    middleware=[PIIMiddleware("email")],                     # khai loại thông tin cá nhân cần xử lý
+)
+```
+
+Trang chỉ đưa một loại là `"email"`. Danh sách loại nhận được và cách xử lý từng loại không nằm ở đây — xem `PIIMiddleware` và Prebuilt middleware.
+
+### 6.7 Steering — chốt duyệt của con người
+
+**Khái niệm.** Đặt người vào những điểm quyết định cụ thể mà không phải dựng lại agent. Agent dừng và chờ; người duyệt, sửa, hoặc từ chối; rồi chạy tiếp.
+
+**Vai trò.** Toàn quyền tự chủ không phải lúc nào cũng phù hợp — trước những thao tác ghi đè có tính phá hủy, những lệnh gọi API tốn kém, hoặc bất cứ việc gì cần phán đoán.
+
+**Áp dụng thực tế.** Agent soạn xong bản thảo tờ trình và định ghi đè lên file đang dùng. Đây là chỗ cần một người nhìn qua trước khi file cũ biến mất.
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langchain.tools import tool
+
+
+@tool
+def search(query: str) -> str:
+    """Search for a query and return a short summary."""
+    return f"Search results for: {query}"
+
+
+agent = create_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[search],
+    middleware=[HumanInTheLoopMiddleware(interrupt_on={"write_file": True})],   # chặn đúng tool có tên write_file
+)
+```
+
+**!Note:** Ví dụ đặt chốt cho `write_file` trong khi danh sách tool chỉ khai `search`. Trang không nói `write_file` từ đâu ra — theo mục 6.1 thì đó là tool do `FilesystemMiddleware` mang lại, nhưng middleware đó không có mặt trong khối code này. Đây là suy luận, chưa được trang xác nhận; phải chạy thử mới rõ chốt duyệt có kích hoạt hay không khi tên tool không tồn tại.
+
+Xem thêm `HumanInTheLoopMiddleware`, Human-in-the-loop.
 
 ---
 
-## 11. Tham số của `create_agent` gặp trong trang này
+## 7. Ba trang tra cứu về middleware
 
-| Tham số | Nhận gì | Mục |
-|---|---|---|
-| `model` | chuỗi định danh hoặc instance | 2 |
-| `tools` | list tool | 3 |
-| `system_prompt` | `str` hoặc `SystemMessage` | 4 |
-| `middleware` | list middleware | 2, 3, 4 |
-| `response_format` | schema, `ToolStrategy`, `ProviderStrategy` | 7 |
-| `state_schema` | `TypedDict` kế thừa `AgentState` | 8 |
-| `context_schema` | dataclass hoặc `TypedDict` | 3.2 |
-| `store` | ví dụ `InMemoryStore()` | 3.2 |
-| `name` | chuỗi `snake_case` | 5 |
-
-Đây là danh sách rút từ các ví dụ trong trang, **không phải** chữ ký đầy đủ của hàm.
-
----
-
-## Cần kiểm chứng thêm
-
-- [ ] Điều kiện dừng "iteration limit". Doc nói agent chạy tới khi model trả lời cuối **hoặc** chạm giới hạn số vòng lặp, nhưng không nói giới hạn mặc định là bao nhiêu và đặt ở đâu. Xác minh: đọc reference `create_agent` và trang Middleware (có thể là một middleware riêng).
-- [ ] `request.override()` nhận được những tham số nào. Trang này thấy `model=`, `tools=`, `tool=` — chưa rõ còn gì khác. Xác minh: reference của `ModelRequest` và `ToolCallRequest`.
-- [ ] Cấu trúc namespace của Store. Ví dụ viết `store.get(("features",), user_id)` — tuple đầu là namespace, nhưng doc không giải thích quy tắc đặt. Xác minh: trang Long-term memory hoặc reference LangGraph Store.
-- [ ] Kết hợp dynamic model với `response_format`. Doc chỉ nói pre-bound model không dùng được với structured output, chưa xác nhận model chưa bind thì chắc chắn chạy được. Xác minh: chạy thử.
-- [ ] Tên model trong ví dụ (`gpt-5.4`, `gemini-3.1-pro-preview`). Chưa rõ có thật hay chỉ là placeholder của bản doc. Xác minh: đối chiếu reference `init_chat_model`.
-- [ ] Sơ đồ graph ở mục 1 là **suy luận** từ mô tả chữ, doc không vẽ hình. Xác minh: đọc trang Graph API của LangGraph.
-- [ ] Middleware chạy theo thứ tự nào khi truyền nhiều cái vào list. Trang này im lặng. Xác minh: trang Middleware.
+| Trang | Trả lời câu hỏi |
+|---|---|
+| Middleware overview | Chồng middleware hoạt động ra sao, móc kích hoạt lúc nào |
+| Prebuilt middleware | Toàn bộ middleware dựng sẵn, kèm ví dụ cấu hình |
+| Custom middleware | Cách tự viết móc cho logic nghiệp vụ, che thông tin cá nhân |
 
 ---
 
 ## Tham chiếu chéo
 
-| File | Bổ sung cho mục nào |
-|---|---|
-| [models](./models.md) | Mục 2 — tham số model, `init_chat_model` |
-| [tools](./tools.md) | Mục 3 — cách viết `@tool`, schema đối số |
-| [messages](./messages.md) | Mục 3.3, 4 — `ToolMessage`, `SystemMessage` |
-| [structured-output](./structured-output.md) | Mục 7 — `ToolStrategy` vs `ProviderStrategy` |
-| [streaming](./streaming.md) | Mục 9 — các `stream_mode` |
+- [Models](https://docs.langchain.com/oss/python/langchain/models) — tham số model, khai báo nhà cung cấp, chọn model động (mục 3.1)
+- [Tools](https://docs.langchain.com/oss/python/langchain/tools) — định nghĩa tool, tool đọc bối cảnh, chọn tool động (mục 3.2, 4.2)
+- [Structured output](https://docs.langchain.com/oss/python/langchain/structured-output) — các chiến lược cho mục 3.4
+- [Runtime](https://docs.langchain.com/oss/python/langchain/runtime) — `runtime.context` ở mục 4.2
+- [Long-term memory](https://docs.langchain.com/oss/python/langchain/long-term-memory) — checkpointer ở mục 4.1
+- [Streaming](https://docs.langchain.com/oss/python/langchain/streaming) — chế độ stream và loại sự kiện ở mục 5
+- [Middleware overview](https://docs.langchain.com/oss/python/langchain/middleware/overview), [Prebuilt middleware](https://docs.langchain.com/oss/python/langchain/middleware/built-in), [Custom middleware](https://docs.langchain.com/oss/python/langchain/middleware/custom) — mục 6
+- [Deep Agents](https://docs.langchain.com/oss/python/deepagents/harness) — `create_deep_agent` lắp sẵn cả chồng middleware ở mục 6
+- [Subagents](https://docs.langchain.com/oss/python/langchain/multi-agent/subagents), [Skills](https://docs.langchain.com/oss/python/langchain/multi-agent/skills) — mục 6.2, 6.3
+- [Human-in-the-loop](https://docs.langchain.com/oss/python/langchain/human-in-the-loop) — mục 6.7

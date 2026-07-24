@@ -7,29 +7,30 @@ const ROOT = path.resolve(import.meta.dirname, '..')
 /** Bo qua file rac / file rieng tu, khong dua vao sidebar */
 const IGNORE_FILES = new Set(['..md', 'README.md'])
 
-/** "01-foundations" -> "01 — Foundations" */
+/** Bo tien to so o dau: "01-foundations" -> "foundations", "03-02-tools" -> "tools" */
+function stripNumPrefix(name: string): string {
+  return name.replace(/^(\d+-)+/, '')
+}
+
+/** "01-foundations" -> "Foundations" (so chi de sap thu tu, khong hien thi) */
 function folderLabel(dirName: string): string {
-  const m = dirName.match(/^(\d+)-(.*)$/)
-  const raw = m ? m[2] : dirName
-  const words = raw
+  return stripNumPrefix(dirName)
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
-  return m ? `${m[1]} — ${words}` : words
 }
 
-/** Lay `title` trong frontmatter, khong co thi suy ra tu ten file */
+/** Lay `title` trong frontmatter (khong kem so), khong co thi suy ra tu ten file */
 function fileTitle(absPath: string, fileName: string): string {
   try {
     const fm = matter(fs.readFileSync(absPath, 'utf-8')).data as { title?: string }
-    if (fm?.title) {
-      const num = fileName.match(/^(\d+-\d+)/)
-      return num ? `${num[1]} ${fm.title}` : fm.title
-    }
+    if (fm?.title) return fm.title
   } catch {
     /* file khong doc duoc thi rot xuong ten file */
   }
-  return fileName.replace(/\.md$/, '')
+  // Fallback: "03-03-middleware-overview" -> "Middleware overview"
+  const words = stripNumPrefix(fileName.replace(/\.md$/, '')).replace(/-/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 function mdFilesIn(dirAbs: string): string[] {
@@ -49,14 +50,37 @@ function subDirsIn(dirAbs: string): string[] {
     .sort()
 }
 
+type SidebarItem = { text: string; link?: string; collapsed?: boolean; items?: SidebarItem[] }
+
+/**
+ * Quet mot thu muc: file .md thanh item, thu muc con thanh group long nhau (de quy).
+ * `dirAbs` la duong dan tuyet doi, `urlPrefix` la link URL tuong ung (vd /LangChain/03-harness).
+ */
+function itemsForDir(dirAbs: string, urlPrefix: string): SidebarItem[] {
+  const fileItems: SidebarItem[] = mdFilesIn(dirAbs).map((f) => ({
+    text: fileTitle(path.join(dirAbs, f), f),
+    link: `${urlPrefix}/${f.replace(/\.md$/, '')}`
+  }))
+
+  const dirItems: SidebarItem[] = []
+  for (const sub of subDirsIn(dirAbs)) {
+    const nested = itemsForDir(path.join(dirAbs, sub), `${urlPrefix}/${sub}`)
+    if (nested.length) {
+      dirItems.push({ text: folderLabel(sub), collapsed: true, items: nested })
+    }
+  }
+
+  return [...fileItems, ...dirItems]
+}
+
 /**
  * Sinh sidebar cho mot stack (LangChain / LangGraph / Langfuse).
- * Moi thu muc con thanh mot group, moi file .md thanh mot item.
- * Them file moi vao repo la sidebar tu cap nhat, khong phai sua config.
+ * Moi thu muc con thanh mot group long theo do sau bat ky, moi file .md thanh mot item.
+ * Them file / folder moi vao repo la sidebar tu cap nhat, khong phai sua config.
  */
-export function sidebarForStack(stack: string) {
+export function sidebarForStack(stack: string): SidebarItem[] {
   const stackAbs = path.join(ROOT, stack)
-  const groups: { text: string; collapsed: boolean; items: { text: string; link: string }[] }[] = []
+  const groups: SidebarItem[] = []
 
   // File .md nam thang trong thu muc stack (README, SOURCES, ...)
   const rootItems = mdFilesIn(stackAbs).map((f) => ({
@@ -71,11 +95,7 @@ export function sidebarForStack(stack: string) {
   }
 
   for (const dir of subDirsIn(stackAbs)) {
-    const dirAbs = path.join(stackAbs, dir)
-    const items = mdFilesIn(dirAbs).map((f) => ({
-      text: fileTitle(path.join(dirAbs, f), f),
-      link: `/${stack}/${dir}/${f.replace(/\.md$/, '')}`
-    }))
+    const items = itemsForDir(path.join(stackAbs, dir), `/${stack}/${dir}`)
     if (items.length) {
       groups.push({ text: folderLabel(dir), collapsed: true, items })
     }

@@ -251,7 +251,7 @@ ToolMessage(content=[{text}, {image}])           ← một message chứa hai kh
 message.content_blocks                           ← đọc lại danh sách khối đã chuẩn hóa sau khi tool chạy xong
 ```
 
-**!Note:** Model phải hỗ trợ đúng loại phương tiện được trả về. Tài liệu yêu cầu kiểm tra năng lực model trước khi trả ảnh, âm thanh, video .
+**!Note:** Model phải hỗ trợ đúng loại phương tiện được trả về. Tài liệu yêu cầu kiểm tra năng lực model trước khi trả ảnh, âm thanh, video — không mô tả model không hỗ trợ thì hỏng ở đâu.
 
 ---
 
@@ -309,6 +309,7 @@ Order 12345 is shipped and will arrive in 2 days.   ← nguyên văn tool trả 
 ```
 
 **!Note:** Model gọi nhiều tool trong một lượt thì cờ này chỉ có tác dụng khi **tất cả** tool được gọi đều bật. Bật cho một tool rồi tin nó luôn cắt vòng lặp là hiểu sai — chỉ cần model gọi kèm một tool thường là vòng lặp chạy tiếp.
+
 ---
 
 ## 6. Xử lý lỗi tool
@@ -356,91 +357,119 @@ có middleware       → ToolMessage("Tool error: … (invalid literal…)")   �
 
 ---
 
-## 7. Chọn tool động `[JS]`
+## 7. Chọn tool động
 
-**Khái niệm.** Danh sách tool đưa cho model được sửa lúc chạy thay vì cố định từ lúc tạo agent.
+**Khái niệm.** Danh sách tool gửi cho model được tính lại trước mỗi lượt gọi, thay vì cố định từ lúc tạo agent.
 
-**Vai trò.** Quá nhiều tool thì model bị ngợp và chọn sai; quá ít thì agent làm được ít việc. Chọn động cho phép danh sách thay đổi theo trạng thái đăng nhập, quyền của người dùng, cờ tính năng, hoặc giai đoạn hội thoại.
+**Vai trò.** Danh sách tool là một phần của prompt. Quá nhiều thì model bị ngợp và chọn sai; quá ít thì agent làm được ít việc. Lọc động biến việc phân quyền từ lời dặn trong prompt thành ràng buộc cứng — model không thấy tool thì không gọi được, không cần trông vào việc nó nghe lời.
 
-**Áp dụng thực tế.** Agent hỗ trợ khách hàng có 4 tool đọc và 3 tool ghi. Khách chưa xác thực mà model vẫn nhìn thấy tool chuyển tiền thì rủi ro nằm ở chỗ chỉ còn trông vào việc model tự kiềm chế. Cắt tool ra khỏi danh sách thì model không có gì để gọi.
+**Áp dụng thực tế.** Agent hỗ trợ khách có 4 tool đọc và 3 tool ghi, trong đó có tool chuyển tiền. Khách chưa xác thực mà model vẫn thấy tool chuyển tiền thì tuyến phòng thủ duy nhất là một câu trong system prompt. Cắt tool khỏi danh sách thì rủi ro đó biến mất.
 
-Tài liệu chia thành hai cách, tùy tool đã biết trước hay chưa.
+**Điểm phải nắm trước.** Việc lọc đặt ở `wrap_model_call` — hook bọc quanh **từng lượt gọi model**, không chạy một lần lúc khởi động. Lượt 1 khách chưa xác thực thì thấy 4 tool, lượt 5 đã xác thực thì thấy 7 tool, vẫn cùng một agent.
 
-### 7.1 Lọc danh sách tool đã đăng ký sẵn
-
-Đăng ký hết mọi tool từ đầu, rồi mỗi lượt gọi model lọc bớt bằng hook `wrapModelCall`.
-
-```ts
-const contextBasedTools = createMiddleware({
-  name: "ContextBasedTools",
-  contextSchema,
-  wrapModelCall: (request, handler) => {
-    const userRole = request.runtime.context.userRole;                       // lấy vai trò từ context, không phải từ lời người dùng
-
-    let filteredTools = request.tools;
-
-    if (userRole === "admin") {
-      // quản trị viên giữ nguyên toàn bộ danh sách
-    } else if (userRole === "editor") {
-      filteredTools = request.tools.filter((t) => t.name !== "delete_data"); // cắt đúng một tool nguy hiểm
-    } else {
-      filteredTools = request.tools.filter((t) => t.name.startsWith("read_"));  // vai trò còn lại chỉ còn tool đọc
-    }
-
-    return handler({ ...request, tools: filteredTools });                    // truyền danh sách đã lọc xuống lời gọi model
-  },
-});
-```
-
-Tài liệu còn hai biến thể cùng khuôn: lọc theo `state` (bật tool nâng cao sau khi đã xác thực hoặc sau vài lượt hội thoại), và lọc theo `store` (bật theo cờ tính năng lưu sẵn cho từng người dùng).
-
-Cách này hợp khi mọi tool đều biết trước lúc khởi động, và thứ thay đổi chỉ là tool nào được lộ ra.
-
-### 7.2 Đăng ký tool ngay lúc chạy
-
-Khi tool chỉ xuất hiện lúc chạy — nạp từ máy chủ MCP, sinh ra theo dữ liệu người dùng, lấy từ một kho tool từ xa — phải làm hai việc chứ không phải một.
-
-```ts
-const dynamicToolMiddleware = createMiddleware({
-  name: "DynamicToolMiddleware",
-  wrapModelCall: (request, handler) => {
-    return handler({ ...request, tools: [...request.tools, calculateTip] }); // việc 1: cho model nhìn thấy tool mới
-  },
-  wrapToolCall: (request, handler) => {
-    if (request.toolCall.name === "calculate_tip") {
-      return handler({ ...request, tool: calculateTip });                    // việc 2: chỉ cho agent biết chạy tool đó bằng gì
-    }
-    return handler(request);                                                 // tên khác thì để nguyên đường chạy cũ
-  },
-});
-```
-
-**!Note:** Thiếu hook thứ hai là lỗi im lặng ở mức khó chịu nhất: model nhìn thấy tool, model gọi tool, và agent không biết lấy gì ra chạy vì tool đó không nằm trong danh sách đăng ký ban đầu. Tài liệu nêu rõ hook `wrap_tool_call` là bắt buộc với tool đăng ký lúc chạy.
-
-Hai hook được gọi trong phần văn bản là `wrap_model_call` và `wrap_tool_call` theo lối Python, trong khi code viết `wrapModelCall` và `wrapToolCall`. Bản Python nhiều khả năng có cùng hai hook với tên `snake_case`. Đây là suy luận từ cách đặt tên; chi tiết thuộc về trang middleware chứ không thuộc trang này.
+Hai cách, phân biệt bằng một câu hỏi: **tool đã tồn tại từ lúc tạo agent chưa?**
 
 ---
 
-## 8. Headless tools — tool chạy ở phía người dùng `[JS]`
+### 7.1 Lọc danh sách tool đã đăng ký sẵn
 
-**Khái niệm.** Tool chỉ khai định nghĩa ở phía máy chủ — tên, mô tả, schema tham số — còn phần thân hàm đăng ký và chạy ở phía client. Khi model gọi tool loại này, lần chạy **dừng lại** thay vì thực thi tại chỗ; ứng dụng chạy phần việc ở đúng môi trường của nó rồi **chạy tiếp** với kết quả trả về.
+**Khái niệm.** Đăng ký hết tool vào `create_agent` từ đầu, mỗi lượt gọi model lọc bớt bằng `@wrap_model_call`.
 
-**Vai trò.** Có những việc chỉ làm được ở nơi ứng dụng của người dùng đang chạy, thường là trình duyệt: lấy vị trí, đọc bộ nhớ cục bộ, đọc clipboard, vẽ canvas, mở hộp chọn file. Ngoài ra dữ liệu ở lại trên máy người dùng, và không mất thêm một vòng gọi về máy chủ.
+**Vai trò.** Tool vẫn nằm trong agent, chỉ bị ẩn khỏi model ở những lượt mà người dùng không đủ quyền để sử dụng.
 
-**Áp dụng thực tế.** Agent hỗ trợ điền hồ sơ cần đọc file người dùng vừa chọn trên máy họ. File đó không có trên máy chủ và cũng không nên tải lên chỉ để đọc một trường.
+> **Lợi ích:** không phải dựng riêng một agent cho mỗi nhóm quyền, danh sách gửi cho model ngắn lại nên nó ít chọn nhầm tool hơn.
 
-**Bốn bước theo tài liệu:**
+```python
+@dataclass
+class Context:
+    user_role: str
 
-1. Khai tool bằng `tool({ name, description, schema })` — chỉ metadata và phần kiểm tra dữ liệu, không có phần chạy phía máy chủ
-2. Gắn hành vi thật bằng `.implement(async (args) => { ... })`, trả về một bản cài đặt gồm định nghĩa kèm hàm `execute`
-3. Đăng ký định nghĩa ở bước 1 với `createAgent` hoặc đồ thị, để model nhìn thấy tool như mọi tool khác
-4. Truyền bản cài đặt ở bước 2 vào tùy chọn `tools` của hook nhận dòng dữ liệu ở phía client
+@wrap_model_call                                                   # bọc quanh mỗi lượt gọi model
+def context_based_tools(
+    request: ModelRequest,                                         # gói sắp gửi cho model: messages, tools, model…
+    handler: Callable[[ModelRequest], ModelResponse]               # handler là lời gọi model thật
+) -> ModelResponse:
+    """Filter tools based on Runtime Context permissions."""
+    if request.runtime is None or request.runtime.context is None:
+        user_role = "viewer"                                       # thiếu context thì rơi về vai trò hạn chế nhất
+    else:
+        user_role = request.runtime.context.user_role              # lấy quyền từ context, không lấy từ lời người dùng
 
-**!Note:** Tài liệu yêu cầu để định nghĩa và phần cài đặt ở **hai module riêng**. Máy chủ import file định nghĩa, frontend import cùng file đó, còn logic chạy chỉ nằm ở module mà máy chủ không bao giờ nạp. Gộp một file thì code chạy phía client bị kéo lên máy chủ.
+    if user_role == "admin":
+        pass                                                       # giữ nguyên danh sách
+    elif user_role == "editor":
+        tools = [t for t in request.tools if t.name != "delete_data"]
+        request = request.override(tools=tools)                    # override sinh request MỚI, không sửa bản cũ
+    else:
+        tools = [t for t in request.tools if t.name.startswith("read_")]
+        request = request.override(tools=tools)
 
-**Phía Python khác một điểm.** Gọi `tool(...)` chỉ với `name`, `description`, `args_schema` thì LangChain trả về một `HeadlessTool`, và **không có** API `.implement()` ở phía Python. Đoạn này tôi lấy từ chỉ mục tìm kiếm của chính trang Python, không phải từ bản tải về — bản tải về không hiện mục này. Phải mở trang gốc để đối chiếu trước khi dựa vào.
+    return handler(request)                                        # truyền bản đã lọc, đưa nhầm bản cũ là mất tác dụng
 
-Phần theo dõi vòng đời (`start`, `success`, `error`) qua callback `onTool` và ví dụ chạy đầu-cuối với `useStream` nằm ở trang frontend riêng, không thuộc phạm vi trang này.
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[read_data, write_data, delete_data],                    # đăng ký đủ ở đây, lọc làm ở middleware
+    middleware=[context_based_tools],
+    context_schema=Context                                         # thiếu dòng này thì runtime.context không có kiểu để đọc
+)
+```
+
+**Kết quả** (dựng lại):
+
+```
+admin  → 3 tool gửi cho model                        ← giữ nguyên
+editor → 2 tool, delete_data biến mất khỏi schema    ← model không thấy nên không gọi được
+viewer → chỉ tool tên bắt đầu bằng read_             ← quy ước đặt tên thành cơ chế phân quyền
+```
+
+---
+
+### 7.2 Đăng ký tool ngay lúc chạy
+
+**Khái niệm.** Tool được thêm vào agent trong lúc chạy, không có mặt trong `tools=[...]` lúc tạo agent. Cần **hai** hook: `wrap_model_call` chèn tool vào danh sách gửi cho model, `wrap_tool_call` chỉ cho agent biết chạy tool đó bằng hàm nào.
+
+**Vai trò.** Gỡ ràng buộc phải biết trước danh sách tool lúc viết code. Danh sách được nạp lúc chạy, từ nguồn bên ngoài, và thay đổi mà không phải sửa code hay deploy lại.
+
+**Bài toán nó giải quyết.** Viết `create_agent(tools=[...])` là phải liệt kê tool ra tại thời điểm gõ dòng đó. Nhưng có những tool khi ấy chưa tồn tại — không phải chưa viết, mà là chưa biết chúng là gì. Ba tình huống tài liệu nêu:
+
+1. **Tool nạp từ máy chủ MCP.** Agent cắm vào một MCP server. Server đó phơi ra tool nào là do bên vận hành server quyết, và họ thêm bớt bất cứ lúc nào. Code của agent chỉ biết địa chỉ server, không biết danh sách — phải gọi lên hỏi lúc chạy mới có. Không có cơ chế này thì mỗi lần server thêm một tool là phải sửa code, build lại, deploy lại agent.
+
+2. **Tool sinh theo dữ liệu người dùng.** Mỗi khách có bộ mẫu báo cáo riêng, mỗi mẫu thành một tool. Khách A có 3 mẫu, khách B có 11, và họ tự thêm mẫu mới trong giao diện. Danh sách phụ thuộc vào ai đang đăng nhập nên không liệt kê sẵn được — chỉ biết sau khi đã xác định người dùng của lượt chạy.
+
+3. **Tool lấy từ kho tool từ xa.** Một đội khác quản lý registry tool dùng chung, thêm bớt theo nhịp của họ. Agent lấy về lúc chạy thay vì phải bám theo mỗi lần registry đổi.
+
+**Vì sao phải hai hook.** Agent giữ một bảng tra `tên tool → hàm thật`, dựng một lần từ `tools=[...]`. Model gọi tool nào thì agent tra bảng này để biết chạy gì. Tool chèn vào lúc chạy không nằm trong bảng đó — nên ngoài việc cho model thấy tool, còn phải chỉ đường cho agent thực thi.
+
+**!Note:** Làm việc thứ nhất mà quên việc thứ hai là lỗi khó lần nhất ở mục này. Model thấy tool, model gọi tool, agent tra bảng không có tên đó nên không chạy được — trong khi model vẫn tin tool tồn tại và gọi lại. Lỗi không lộ lúc khởi động, chỉ nổ đúng lượt đầu tiên model chạm vào tool động. Tài liệu nêu rõ `wrap_tool_call` là bắt buộc với tool đăng ký lúc chạy.
+
+---
+
+## 8. Headless tools — tool chạy ở nơi khác, không chạy trong tiến trình
+
+**Khái niệm.** Tool chỉ khai phần định nghĩa — tên, mô tả, schema tham số — không có thân hàm. Gọi `tool(name=..., description=..., args_schema=...)` với đúng ba thứ đó thì LangChain trả về một `HeadlessTool`. Model gọi tool loại này thì lần chạy **dừng lại** thay vì thực thi tại chỗ, phát ra một payload để bên ngoài xử lý, rồi **chạy tiếp** khi nhận được kết quả.
+
+**Vai trò.** Đưa phần thực thi ra khỏi tiến trình chạy agent, sang nơi thực sự làm được việc đó. Model vẫn thấy một tool bình thường và gọi như mọi tool khác — phần khác biệt nằm hoàn toàn ở tầng dưới.
+
+**Bài toán nó giải quyết.** Tool thường có thân hàm chạy trên máy chủ, nên chỉ làm được những gì máy chủ làm được. Ba loại việc nằm ngoài phạm vi đó:
+
+*Việc phụ thuộc thiết bị hoặc giao diện của người dùng.* Lấy vị trí, đọc bộ nhớ cục bộ của trình duyệt, đọc clipboard, vẽ canvas, mở hộp chọn file. Máy chủ không có trình duyệt, không có màn hình, không có thiết bị của khách.
+
+*Dữ liệu không nên rời khỏi máy người dùng.* Ghi chú cá nhân lưu trong trình duyệt, file khách vừa chọn. Tải lên máy chủ chỉ để đọc một trường là tạo thêm rủi ro không cần thiết.
+
+*Việc cần người quyết hoặc cần một dịch vụ khác làm.* Bước duyệt của con người, hoặc lệnh phải chạy trong một hệ thống nội bộ khác.
+
+**Bốn bước theo tài liệu.**
+
+1. Khai tool bằng `tool(name=..., description=..., args_schema=...)` từ `langchain.tools` — chỉ có schema, không có phần chạy trong tiến trình
+2. Đăng ký tool đó với `create_agent` hoặc đồ thị LangGraph, để model gọi được như tool thường
+3. Bắt payload khi tool bị gọi. Thay vì chạy, đồ thị dừng và phát ra payload dạng `{"type": "tool", "tool_call": {"id", "name", "args"}}`
+4. Cho đồ thị chạy tiếp sau khi ứng dụng, dịch vụ khác, hoặc người duyệt đã làm xong phần việc
+
+**!Note:** Phía Python **không có** API `.implement()`. Muốn chạy tool ở trình duyệt thì phải khai lại schema ở frontend rồi gắn `.implement(...)` bên đó — tức là hai bản khai, một ở server một ở client, và tên với schema phải khớp nhau. Đọc ví dụ JavaScript rồi đi tìm `.implement()` trong Python là ngõ cụt.
+
+**Quan hệ với dừng chờ người duyệt.** Bước 3 và 4 là cùng một cơ chế dừng/chạy tiếp của LangGraph. Nghĩa là headless tool không chỉ dùng cho luồng trình duyệt — bất cứ chỗ nào cần chèn một bước ngoài tiến trình, kể cả bước người xét duyệt, đều dùng được khuôn này.
+
+**Ngoài phạm vi trang này:** cách frontend bắt tín hiệu dừng và gửi kết quả về (thuộc SDK JavaScript), callback `onTool` theo dõi vòng đời, và ví dụ chạy đầu-cuối với `useStream`. Ba thứ đó nằm ở trang Headless tools phía frontend.
 
 ---
 
@@ -505,27 +534,6 @@ There are 7 messages.     ← đếm cả message của người, của model v�
 LangChain có sẵn một bộ tool và toolkit cho các việc phổ biến: tìm kiếm web, chạy code, truy vấn cơ sở dữ liệu. Danh sách đầy đủ ở trang [tools and toolkits](https://docs.langchain.com/oss/python/integrations/tools).
 
 Một số chat model có tool chạy ngay phía nhà cung cấp — tìm kiếm web, trình chạy code — không cần tự định nghĩa và cũng không cần tự vận hành. Cách bật nằm ở trang tích hợp của từng model và trang [Models](https://docs.langchain.com/oss/python/langchain/models#server-side-tool-use), không thuộc phạm vi trang này.
-
----
-
-## 11. Đối chiếu hai bản
-
-| Việc | Python | JavaScript |
-|---|---|---|
-| Khai tool | `@tool` + docstring + type hint | `tool(fn, { name, description, schema })` + zod |
-| Schema phức tạp | `args_schema=` với Pydantic | `z.object({...})` với `.describe()` |
-| Đọc context | `runtime.context` | `config.context` |
-| Đọc store | `runtime.store` | `config.store` |
-| Phát tiến độ | `runtime.stream_writer` | `config.writer` |
-| Mã lượt gọi tool | `runtime.tool_call_id` | `config.toolCallId` |
-| Danh tính lần chạy | `runtime.execution_info.thread_id` | `runtime.executionInfo.threadId` |
-| Xử lý lỗi tool | `ToolNode(handle_tool_errors=…)` | middleware `wrapToolCall` |
-| Trả thẳng cho người dùng | *(không thấy trên bản tải về)* | `returnDirect: true` |
-| Nội dung đa phương thức | *(không thấy trên bản tải về)* | trả danh sách khối nội dung |
-| Chọn tool động | *(không thấy trên bản tải về)* | middleware `wrapModelCall` |
-| Headless tools | có `HeadlessTool`, không có `.implement()` | `.implement()` ở phía client |
-
-Bốn dòng ghi *(không thấy trên bản tải về)* không có nghĩa là bản Python thiếu tính năng — chỉ có nghĩa là bản trang tôi đọc được không chứa mục đó. Với ba trong bốn mục, chính phần văn bản của trang JavaScript lại viết tên tham số theo lối Python (`return_direct=True`, `content_blocks`, `wrap_model_call`), nên khả năng cao bản Python có đủ. Cần mở lại trang gốc để chốt.
 
 ---
 

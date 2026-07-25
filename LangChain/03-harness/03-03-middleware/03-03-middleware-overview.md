@@ -1,60 +1,24 @@
 ---
-title: Middleware — tổng quan
+title: Middleware — Overview
 doc_source: https://docs.langchain.com/oss/python/langchain/middleware/overview
-accessed: 2026-07-22
-lc_version: "1.x"
+accessed: 2026-07-24
+version: "1.x"
 status: draft
 lab:
 related:
-  - ./agents.md
-  - ./tools.md
-  - ./middleware-built-in.md
-  - ./middleware-custom.md
+  - ./03-04-middleware-built-in.md
+  - ./03-05-middleware-custom.md
 ---
 
-# Middleware — tổng quan
-
-> Middleware là cách chen logic riêng vào giữa các bước của agent mà không phải sửa lõi agent.
-> Trang này là trang cổng: nó nói middleware dùng để làm gì, chạy ở đâu, rồi đẩy sang hai trang con là [built-in](./middleware-built-in.md) và [custom](./middleware-custom.md). Nội dung ít, phần lớn giá trị nằm ở hai sơ đồ hình ảnh.
-
-**Cảnh báo về file này.** Trang gốc truyền tải bộ hook bằng **hai file ảnh**, không bằng chữ. Bảng hook ở mục 2 vì thế lấy từ trang Custom middleware và blog chính thức của LangChain, không phải từ trang này. Đã ghi rõ tại chỗ.
+# Middleware — tổng quan (`create_agent(middleware=[...])`)
 
 ---
 
-## 0. Từ điển thuật ngữ
+## 1. Tổng quan
 
-| Từ | Nghĩa dễ hiểu |
-|---|---|
-| **hook** | Điểm móc. Một chỗ trong luồng chạy được để sẵn cho mình chèn code vào. |
-| **node-style hook** | Loại chạy **giữa** hai bước: `before_model`, `after_model`. Nhận `state`, trả về phần cập nhật State. |
-| **wrap-style hook** | Loại **bọc quanh** một bước: `wrap_model_call`, `wrap_tool_call`. Nhận `request` và `handler`, tự quyết gọi `handler` lúc nào, mấy lần. |
-| **agent loop** | Vòng lặp lõi: gọi model → model chọn tool → chạy tool → quay lại model; hết tool call thì dừng. |
-| **guardrail** | Chốt chặn. Luật kiểm tra đầu vào hoặc đầu ra, vi phạm thì chặn. |
-| **PII** | Thông tin định danh cá nhân: tên, số điện thoại, email, số tài khoản. |
-| **interrupt** | Dừng giữa chừng, chờ người thật quyết rồi mới chạy tiếp. |
-| **HITL** | Human-in-the-loop. Có người duyệt xen vào luồng máy chạy. |
-| **`StateGraph`** | Graph tự dựng của LangGraph. Mình tự khai node và đường đi. |
-| **subgraph** | Một graph được nhét làm một node bên trong graph khác. |
-| **checkpointer** | Bộ lưu trạng thái giữa chừng. Không có nó thì dừng xong không khôi phục lại được. |
+Middleware là cơ chế can thiệp vào từng bước bên trong agent. Agent mặc định chạy một vòng lặp kín: gọi model, để model chọn tool, chạy tool, quay lại gọi model. Muốn xen vào giữa — ghi log, sửa prompt, chặn một lệnh gọi, thử lại khi lỗi, đổi model giữa chừng — thì trước đây phải tự dựng lại vòng lặp đó. Middleware là các đoạn mã gắn vào những điểm định sẵn của vòng lặp.
 
----
-
-## 1. Middleware là gì và dùng để làm gì
-
-### Là gì
-
-Lớp chen giữa các bước của agent. Nó không thay đổi lõi `create_agent`, chỉ bọc lấy hoặc xen vào giữa các bước.
-
-### Bốn nhóm việc doc liệt kê
-
-- **Quan sát** — logging, analytics, debug hành vi agent
-- **Biến đổi** — sửa prompt, chọn lọc tool, định dạng đầu ra
-- **Điều khiển luồng** — retry, fallback sang model khác, dừng sớm
-- **Chặn** — rate limit, guardrail, phát hiện PII
-
-Bốn nhóm này chính là bốn thứ mà code nghiệp vụ hay phải làm nhưng không nên nhét vào lõi agent.
-
-### Cách gắn
+Gắn bằng cách truyền vào tham số `middleware` của [`create_agent`](https://reference.langchain.com/python/langchain/agents/factory/create_agent):
 
 ```python
 from langchain.agents import create_agent
@@ -63,150 +27,99 @@ from langchain.agents.middleware import SummarizationMiddleware, HumanInTheLoopM
 agent = create_agent(
     model="gpt-5.5",
     tools=[...],
-    middleware=[
-        SummarizationMiddleware(...),
-        HumanInTheLoopMiddleware(...),
+    middleware=[                          # danh sách, thứ tự có ý nghĩa — xem 03-05 mục "Thứ tự chạy"
+        SummarizationMiddleware(...),     # tóm tắt bớt hội thoại cũ khi sắp chạm trần token
+        HumanInTheLoopMiddleware(...)     # dừng lại chờ người duyệt trước khi chạy tool
     ],
 )
 ```
 
-Truyền một list vào tham số `middleware`. Hết.
+---
+
+## 2. Bốn nhóm việc middleware đảm nhận
+
+| Nhóm việc | Nội dung | Bản dựng sẵn tương ứng |
+|---|---|---|
+| Theo dõi hành vi agent | Ghi log, đo đạc, gỡ lỗi | Custom ->[03-05](./03-05-middleware-custom.md) |
+| Biến đổi đầu vào và đầu ra | Sửa prompt, chọn tool, định dạng kết quả | [LLM tool selector](./03-04-middleware-built-in.md#9-llm-tool-selector--để-một-model-nhỏ-lọc-tool-trước) |
+| Xử lý hỏng hóc và dừng sớm | Thử lại, phương án dự phòng, cắt vòng lặp | [Tool retry](./03-04-middleware-built-in.md#10-tool-retry--thử-lại-tool-hỏng), [Model fallback](./03-04-middleware-built-in.md#6-model-fallback--đổi-sang-model-khác-khi-model-chính-hỏng), [Model call limit](./03-04-middleware-built-in.md#4-model-call-limit--chặn-trần-số-lần-gọi-model) |
+| Chặn và làm sạch | Giới hạn tần suất, rào chắn nội dung, phát hiện thông tin cá nhân | [PII detection](./03-04-middleware-built-in.md#7-pii-detection--phát-hiện-và-xử-lý-thông-tin-cá-nhân) |
 
 ---
 
-## 2. Hook chen vào chỗ nào
+## 3. Vòng lặp agent và chỗ middleware chen vào
 
-Vòng lặp lõi — gọi model, để model chọn tool, dừng khi model không gọi tool nữa:
+**Khái niệm.** Vòng lặp lõi của agent gồm ba việc: gọi model, để model chọn tool để chạy, và kết thúc khi model không gọi thêm tool nào nữa. Middleware mở ra các hook — điểm móc để gắn mã — ở **trước và sau mỗi bước** trong vòng lặp đó.
 
-```
-        ┌──────────┐
-  vào → │  model   │ ── không còn tool call ──→ ra
-        └────┬─────┘
-             │ có tool call
-             ▼
-        ┌──────────┐
-        │  tools   │
-        └────┬─────┘
-             └────────→ quay lại model
-```
+<div align="center">
+  <img src="../../assets/images/image.png" width="350">
+</div>
 
-(dựng lại — trang gốc vẽ bằng ảnh `core_agent_loop.png`, tôi không đọc được nội dung ảnh)
+**Vai trò.** Vòng lặp chỉ có bấy nhiêu chặng — vào agent, gọi model, chạy tool, ra agent — nên tập hook của middleware cũng khép kín ở bấy nhiêu vị trí. Biết đủ chúng là biết đủ chỗ mình có thể chen vào.
 
-Middleware để hook ở trước và sau mỗi bước trên.
+Hook chỉ đứng ở **ranh giới trước/sau một chặng**, không xuyên vào bên trong chặng đó. Hai giới hạn hay gặp:
 
-### Bảng hook
+- **Không chen được giữa hai token đang chảy ra.** Model trả lời bằng cách phát ra từng mẩu chữ. `wrap_model_call` bọc quanh toàn bộ lời gọi model, không chen vào giữa mẩu thứ 3 và mẩu thứ 4 được. Muốn sửa nội dung khi nó đang stream ra người dùng thì middleware không làm được.
 
-**Nguồn của bảng này không phải trang overview.** Trang overview chỉ đưa ảnh `middleware_final.png`. Tên hook lấy từ trang Custom middleware và bài blog *How Middleware Lets You Customize Your Agent Harness* của LangChain. Cần đối chiếu lại khi đọc trang Custom middleware.
-
-| Hook | Kiểu | Chạy khi nào | Việc hay dùng |
-|---|---|---|---|
-| `before_agent` | node-style | Một lần, đầu mỗi lượt `invoke` | Nạp trí nhớ, mở kết nối, kiểm tra đầu vào |
-| `before_model` | node-style | Trước **mỗi** lần gọi model | Cắt bớt lịch sử, che PII trước khi gửi đi |
-| `wrap_model_call` | wrap-style | Bọc quanh lần gọi model | Cache, retry, đổi model, lọc tool |
-| `wrap_tool_call` | wrap-style | Bọc quanh lần chạy tool | Bắt lỗi tool, chặn tool, sửa kết quả |
-| `after_model` | node-style | Sau mỗi lần model trả lời | Kiểm duyệt đầu ra, guardrail |
-| `after_agent` | node-style | Một lần, cuối lượt chạy | Dọn dẹp, ghi log tổng kết |
-| `dynamic_prompt` | tiện dụng | Khi sinh system prompt | Đổi prompt theo context |
-
-### Khác nhau giữa hai kiểu
-
-Node-style nhận `(state, runtime)` và trả về dict cập nhật State — nó **đứng cạnh** bước chính. Wrap-style nhận `(request, handler)` — nó **cầm quyền gọi** bước chính, nên làm được retry (gọi `handler` nhiều lần) và cache (không gọi `handler` lần nào).
-
-### Thứ tự chạy khi có nhiều middleware
-
-Các hook `before_*` chạy xuôi theo thứ tự trong list; các hook `after_*` chạy **ngược** lại. Giống lớp vỏ: đi vào lột từ ngoài vào trong, đi ra bọc từ trong ra ngoài.
-
-Điểm này lấy từ nguồn ngoài, trang overview không nói. Xem mục "Cần kiểm chứng thêm".
+- **Không chen được vào thân hàm tool.** `wrap_tool_call` bọc quanh cả hàm — chặn được đầu vào, sửa được đầu ra, nhưng không đọc được biến cục bộ giữa hai dòng bên trong hàm. Muốn log giá trị trung gian thì phải sửa chính hàm tool, không phải viết middleware.
 
 ---
 
-## 3. Middleware không phải một runtime riêng
+## 4. Chạy middleware bên trong một workflow LangGraph
 
-Đây là câu đáng nhớ nhất của trang: hook chạy **bên trong** graph LangGraph mà `create_agent` biên dịch ra, không phải một tầng chạy song song bên cạnh.
+**Khái niệm.** Middleware không phải một môi trường chạy riêng. Các hook chạy bên trong graph LangGraph đã dựng mà `create_agent` trả về. Nghĩa là cả agent — kèm toàn bộ middleware của nó — có thể được thả vào một [`StateGraph`](https://reference.langchain.com/python/langgraph/graph/state/StateGraph) lớn hơn với tư cách một chặng hoặc một quy trình con, và mọi hook vẫn chạy nguyên.
 
-Hệ quả trực tiếp: nhét cả agent (kèm toàn bộ middleware) vào một `StateGraph` lớn hơn làm node hoặc subgraph thì mọi hook vẫn chạy nguyên. Interrupt của HITL, tóm tắt, che PII, retry, hook tự viết — tất cả đi theo node đó.
 
-### Dùng khi nào
+**Áp dụng thực tế.** Hộp thư chăm sóc khách hàng nhận thư đến từ nhiều luồng: khiếu nại, hỏi số dư, yêu cầu tất toán. Ở tầng ngoài, một graph phân loại đọc thư rồi rẽ nhánh; mỗi nhánh dẫn tới một agent chuyên trách. Mỗi agent gắn `HumanInTheLoopMiddleware`: mọi lệnh gọi `send_email` phải chờ nhân viên duyệt mới chạy.
 
-Khi topology bên ngoài phức tạp hơn "lặp cho tới khi xong":
+Câu hỏi: khi agent bị nhét làm một node của graph phân loại, HITL bên trong nó có còn chạy không? Có. Agent do `create_agent` dựng ra là một subgraph hoàn chỉnh, mang theo toàn bộ middleware của mình khi được đặt vào graph khác. Quy tắc "chờ duyệt" không phụ thuộc vào việc agent đứng một mình.
 
-- phân loại đầu vào rồi định tuyến sang một trong nhiều agent
-- rẽ việc chạy song song
-- xen agent với các bước tất định
-
-### Bài toán cụ thể
-
-Hệ xử lý email. Một node phân loại thư đến trước, xong mới định tuyến. Agent email được phép đọc thư tự do nhưng **gửi** thư thì phải có người duyệt.
+**Triển khai.**
 
 ```python
+from langchain.agents import AgentState, create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.graph import START, StateGraph
+
+# read_email, send_email, classify_node và route được định nghĩa ở nơi khác.
 email_agent = create_agent(
     model="claude-sonnet-4-6",
     tools=[read_email, send_email],
-    middleware=[HumanInTheLoopMiddleware(interrupt_on={"send_email": True})],
+    middleware=[HumanInTheLoopMiddleware(interrupt_on={"send_email": True})],   # chỉ chặn send_email
 )
 
 graph = (
     StateGraph(AgentState)
-    .add_node("classify", classify_node)
-    .add_node("email_agent", email_agent)
-    .add_edge(START, "classify")
-    .add_conditional_edges("classify", route)
-    .compile()
+    .add_node("classify", classify_node)          # chặng phân loại thư đến
+    .add_node("email_agent", email_agent)         # cả agent trở thành một chặng trong graph lớn
+    .add_edge(START, "classify")                  # vào graph là chạy phân loại trước
+    .add_conditional_edges("classify", route)     # route quyết định đi tiếp nhánh nào
+    .compile()                                    # dựng xong mới chạy được
 )
 ```
 
-`email_agent` nằm làm một node trong graph lớn, middleware vẫn hoạt động.
+Dòng `.add_node("email_agent", email_agent)` là mấu chốt: đối số thứ hai là cả một agent đã dựng, không phải một hàm. Middleware đi kèm nó.
 
-**Chi tiết dễ vấp.** `HumanInTheLoopMiddleware` khớp theo `.name` của tool. Với Python, hàm bọc `@tool` lấy tên từ tên hàm — nên khoá là `"send_email"`, đúng bằng tên hàm. Đặt lại tên tool bằng `@tool("gui_thu")` thì khoá phải đổi theo, không còn là tên hàm nữa.
+**!Note:** `HumanInTheLoopMiddleware` khớp theo `.name` của từng tool. Trong Python, hàm được `@tool` bọc lấy tên từ chính tên hàm — nên khóa ở ví dụ trên là `"send_email"`. Trong TypeScript, khóa khớp với `name` truyền vào `tool({...}, { name })`. Gõ sai khóa thì khóa đó không ứng với tool nào và lệnh gọi đi thẳng, không có ai duyệt; đây là suy luận từ cơ chế khớp theo tên, tài liệu không mô tả trực tiếp hành vi khi khóa sai.
+
+Phạm vi lưu trạng thái của quy trình con (theo từng lần gọi hay theo từng thread) không nằm trên trang này — tài liệu tham khảo thêm [Use subgraphs](https://docs.langchain.com/oss/python/langgraph/use-subgraphs).
 
 ---
 
-## 4. Built-in middleware được nhắc tên trong trang này
+## 5. Nguồn tham khảo thêm 
 
-Trang overview không mô tả cái nào, chỉ trỏ link. Danh sách rút từ các link đó:
-
-| Middleware | Việc nó làm |
+| Trang | Nội dung |
 |---|---|
-| `SummarizationMiddleware` | Tóm tắt lịch sử khi sắp tràn context |
-| `HumanInTheLoopMiddleware` | Dừng chờ người duyệt trước tool nguy hiểm |
-| LLM tool selector | Dùng một model nhanh để lọc tool nào liên quan trước khi gọi model chính |
-| Tool retry | Thử lại tool khi lỗi |
-| Model fallback | Model chính hỏng thì lùi sang model dự phòng |
-| Model call limit | Giới hạn số lần gọi model |
-| PII detection | Phát hiện và che thông tin cá nhân |
-
-Mô tả đầy đủ nằm ở [built-in](./middleware-built-in.md).
-
----
-
-## 5. Bản đồ các trang con
-
-| Trang | Đọc để biết |
-|---|---|
-| Built-in middleware | Danh sách middleware có sẵn và tham số của từng cái |
-| Custom middleware | Cách tự viết bằng decorator hoặc kế thừa `AgentMiddleware` |
-| Middleware API reference | Chữ ký đầy đủ |
-| Middleware integrations | Middleware riêng của Anthropic, AWS, OpenAI |
-| Testing agents | Test agent bằng LangSmith |
-
----
-
-## Cần kiểm chứng thêm
-
-- [ ] Toàn bộ mục 2. Trang gốc dùng hai file ảnh (`core_agent_loop.png`, `middleware_final.png`) mà tôi không đọc được nội dung. Bảng hook và sơ đồ đều dựng từ nguồn khác. Xác minh: đọc trang Custom middleware, đối chiếu từng tên hook và vị trí.
-- [ ] Thứ tự chạy `before_*` xuôi / `after_*` ngược. Lấy từ blog LangChain, trang này không nói. Xác minh: trang Custom middleware hoặc chạy thử với hai middleware in log.
-- [ ] `wrap_tool_call` (middleware) và `handle_tool_errors` (của `ToolNode`, xem [tools](./tools.md) mục 5.1) — chồng lấn hay hai tầng khác nhau, cái nào chạy trước. Cả trang Tools lẫn trang này đều im lặng. Câu hỏi này treo từ file trước, chưa trả lời được.
-- [ ] HITL có cần `checkpointer` và `thread_id` không. Một nguồn ngoài khẳng định là bắt buộc; trang này không nhắc. Xác minh: trang Human-in-the-loop.
-- [ ] `dynamic_prompt` thuộc nhóm hook nào. Một nguồn xếp nó vào nhóm thứ ba gọi là "convenience", tách khỏi node-style và wrap-style. Chưa xác nhận từ doc. Xác minh: trang Custom middleware.
-- [ ] Middleware có sửa được `response_format` / structured output không. Không trang nào trong ba trang đã đọc nói tới. Xác minh: reference `ModelRequest`.
+| Built-in middleware | Các bản dựng sẵn cho việc thường gặp — xem [03-04](./03-04-middleware-built-in.md) |
+| Custom middleware | Tự viết bằng hook và decorator — xem [03-05](./03-05-middleware-custom.md) |
+| Middleware API reference | Tra cứu API đầy đủ: `https://reference.langchain.com/python/langchain/middleware/` |
+| Middleware integrations | Bản riêng cho từng nhà cung cấp: Anthropic, AWS, OpenAI |
+| Testing agents | Kiểm thử agent bằng LangSmith |
 
 ---
 
 ## Tham chiếu chéo
 
-| File | Bổ sung cho mục nào |
-|---|---|
-| [agents](./agents.md) | Mục 1, 2 — `wrap_model_call` đổi model động, lọc tool, `dynamic_prompt` |
-| [tools](./tools.md) | Mục 2 — `wrap_tool_call` so với `handle_tool_errors` |
-| [middleware-built-in](./middleware-built-in.md) | Mục 4 — chi tiết từng middleware có sẵn |
-| [middleware-custom](./middleware-custom.md) | Mục 2 — bộ hook thật, cần đối chiếu lại bảng |
+- [03-04 Middleware dựng sẵn](./03-04-middleware-built-in.md) — chi tiết 16 bản dựng sẵn được nhắc tên ở mục 2
+- [03-05 Custom middleware](./03-05-middleware-custom.md) — tên và thứ tự chạy của các hook nhắc ở mục 3
+- Trang gốc: `https://docs.langchain.com/oss/python/langchain/middleware/overview`

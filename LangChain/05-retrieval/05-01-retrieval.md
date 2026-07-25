@@ -1,7 +1,7 @@
 ---
 title: Retrieval
 doc_source: https://docs.langchain.com/oss/python/langchain/retrieval
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: unknown
 status: draft
 lab: 

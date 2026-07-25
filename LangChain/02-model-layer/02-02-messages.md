@@ -1,7 +1,7 @@
 ---
 title: Messages
 doc_source: https://docs.langchain.com/oss/python/langchain/messages
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "1.x (content_blocks có từ v1)"
 status: draft
 lab:

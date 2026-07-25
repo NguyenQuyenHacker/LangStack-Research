@@ -1,7 +1,7 @@
 ---
 title: Event streaming
 doc_source: https://docs.langchain.com/oss/python/langchain/event-streaming
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "langchain>=1.3 (v3); langchain>=1.3.2 (transformer trên middleware)"
 status: draft
 lab:

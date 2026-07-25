@@ -1,7 +1,7 @@
 ---
 title: Models
 doc_source: https://docs.langchain.com/oss/python/langchain/models
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "1.x (Model profiles cần langchain>=1.1)"
 status: draft
 lab:

@@ -1,7 +1,7 @@
 ---
 title: Observability hooks (cơ chế LangChain)
 doc_source: https://docs.langchain.com/oss/python/langchain/observability
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: unknown
 status: draft
 lab: 

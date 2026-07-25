@@ -1,7 +1,7 @@
 ---
 title: Custom workflow
 doc_source: https://docs.langchain.com/oss/python/langchain/multi-agent/custom-workflow
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: unknown
 status: draft
 lab: 

@@ -1,7 +1,7 @@
 ---
 title: Router
 doc_source: https://docs.langchain.com/oss/python/langchain/multi-agent/router
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: unknown
 status: draft
 lab: 

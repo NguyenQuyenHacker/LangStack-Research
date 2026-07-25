@@ -1,7 +1,7 @@
 ---
 title: Kiến trúc thành phần
 doc_source: https://docs.langchain.com/oss/python/langchain/component-architecture
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: unknown
 status: draft
 lab: 

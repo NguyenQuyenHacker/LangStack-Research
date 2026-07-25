@@ -1,7 +1,7 @@
 ---
 title: Agents
 doc_source: https://docs.langchain.com/oss/python/langchain/agents
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "1.x"
 status: draft
 lab:

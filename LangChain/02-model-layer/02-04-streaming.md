@@ -1,7 +1,7 @@
 ---
 title: Streaming
 doc_source: https://docs.langchain.com/oss/python/langchain/streaming
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "langgraph>=1.1 (bắt buộc nếu dùng version='v2')"
 status: draft
 lab:

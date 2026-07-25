@@ -1,7 +1,7 @@
 ---
 title: Structured output
 doc_source: https://docs.langchain.com/oss/python/langchain/structured-output
-accessed: 2026-07-22
+accessed: 2026-07-25
 lc_version: "1.x (strict cần >=1.2; đọc profile để tự chọn strategy cần >=1.1)"
 status: draft
 lab:

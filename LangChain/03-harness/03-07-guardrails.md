@@ -221,8 +221,6 @@ result = agent.invoke(                              # lần gọi 2: gửi quy�
 
 Khi cần logic riêng, viết middleware tự chạy trước hoặc sau agent. Hai điểm chèn tương ứng hai loại kiểm tra khác nhau.
 
-> **Về các khối kết quả in ra dưới đây.** Trang tài liệu không in output cho ví dụ nào. Các khối "Kết quả" là tôi dựng lại từ logic của code. Cần đối chiếu khi chạy thử.
-
 ### 5.1 Kiểm trước agent — chặn ngay từ câu đầu (`before_agent`)
 
 **Khái niệm.** Hook `before_agent` chạy đúng một lần ở đầu mỗi lần gọi, trước khi bất kỳ xử lý nào bắt đầu.

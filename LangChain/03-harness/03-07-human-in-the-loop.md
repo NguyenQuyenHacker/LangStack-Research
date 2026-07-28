@@ -6,9 +6,9 @@ version: "unknown"
 status: draft
 lab:
 related:
-  - ./guardrails.md
-  - ./middleware.md
-  - ./streaming.md
+  - ./03-06-guardrails.md
+  - ./03-03-middleware/03-03-middleware-overview.md
+  - ../02-model-layer/02-04-streaming.md
 ---
 
 # Human-in-the-loop — chặn agent chờ người duyệt (`HumanInTheLoopMiddleware`)
@@ -330,7 +330,7 @@ for chunk in agent.stream(                              # sau khi có quyết đ
             print(token.content, end="", flush=True)
 ```
 
-Chi tiết các chế độ stream nằm ở [streaming.md](./streaming.md), không thuộc trang này.
+Chi tiết các chế độ stream nằm ở [02-04 Streaming](../02-model-layer/02-04-streaming.md), không thuộc trang này.
 
 > Nếu ứng dụng chỉ cần dừng rồi chạy tiếp bằng `invoke`, **bỏ qua mục này hoàn toàn**. Đây là phần cho trường hợp cần hiển thị tiến trình thời gian thực, không phải kiến thức bắt buộc.
 
@@ -353,8 +353,8 @@ Middleware định nghĩa một hook `after_model` — chạy **sau** khi model 
 ## Tham chiếu chéo
 
 - [guardrails.md](./guardrails.md#4-human-in-the-loop) — bản tóm tắt HITL trong nhóm guardrails; nội dung khớp với file này, file này là bản chi tiết
-- [middleware.md](./middleware.md) — cơ chế hook `after_model`, interrupt, và cách middleware chèn vào luồng
-- [streaming.md](./streaming.md) — các chế độ `stream_mode` dùng ở mục 5
+- [03-03 Middleware](./03-03-middleware/03-03-middleware-overview.md) — cơ chế hook `after_model`, interrupt, và cách middleware chèn vào luồng
+- [02-04 Streaming](../02-model-layer/02-04-streaming.md) — các chế độ `stream_mode` dùng ở mục 5
 - LangGraph interrupts: `https://docs.langchain.com/oss/python/langgraph/interrupts`
 - LangGraph persistence: `https://docs.langchain.com/oss/python/langgraph/persistence`
 - Middleware API reference: `https://reference.langchain.com/python/langchain/middleware/`

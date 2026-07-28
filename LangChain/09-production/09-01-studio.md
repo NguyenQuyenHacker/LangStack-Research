@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./deploy.md          # chưa có file — xem Tham chiếu chéo
-  - ../03-agent-harness/  # file agent (create_agent) — chỉnh lại tên chính xác khi đặt vào cây thư mục
+  - ./09-02-deploy.md
+  - ../03-harness/03-01-agents.md
 ---
 
 # LangSmith Studio (`langgraph dev`)

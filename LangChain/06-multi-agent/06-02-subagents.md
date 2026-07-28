@@ -6,15 +6,15 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./04-01-multi-agent-overview.md
-  - ./04-03-handoffs.md
-  - ./04-05-router.md
+  - ./06-01-overview.md
+  - ./06-03-handoffs.md
+  - ./06-05-router.md
 ---
 
 # Subagents (`create_agent` lồng trong `@tool`)
 
 > Pattern trong đó một agent chính — tài liệu gọi là **supervisor** (agent điều phối) — gọi các agent con như thể chúng là tool. Agent chính quyết gọi agent con nào, đưa đầu vào gì, ghép kết quả ra sao.
-> Khác với [Router](./04-05-router.md) ở chỗ agent điều phối là một agent đầy đủ, giữ ngữ cảnh trò chuyện qua nhiều lượt; router chỉ là một bước phân loại rồi phân phối.
+> Khác với [Router](./06-05-router.md) ở chỗ agent điều phối là một agent đầy đủ, giữ ngữ cảnh trò chuyện qua nhiều lượt; router chỉ là một bước phân loại rồi phân phối.
 
 ---
 
@@ -259,7 +259,7 @@ def call_subagent1(query: str, runtime: ToolRuntime[None, CustomState]):   # run
     return result["messages"][-1].content
 ```
 
-`ToolRuntime` và `AgentState` thuộc tầng tool/agent, đã mô tả ở file tool ([03-02](../03-agent-harness/03-02-tools.md)) — ở đây chỉ dùng lại.
+`ToolRuntime` và `AgentState` thuộc tầng tool/agent, đã mô tả ở file tool ([03-02](../03-harness/03-02-tools.md)) — ở đây chỉ dùng lại.
 
 **!Note:** Khóa `example_state_key` phải được khai báo trong lược đồ trạng thái của **cả** agent chính lẫn agent con. Khai báo thiếu một bên → khóa không truyền qua được, agent con nhận thiếu dữ liệu mà không báo lỗi.
 
@@ -304,9 +304,9 @@ Vì agent con được gọi bên trong hàm tool, LangGraph không phát hiện
 
 ## Tham chiếu chéo
 
-- [04-01 Tổng quan](./04-01-multi-agent-overview.md) — Subagents đối chiếu với bốn pattern còn lại
-- [04-05 Router](./04-05-router.md) — phân biệt supervisor với router (mục "Router vs Subagents")
-- [04-03 Handoffs](./04-03-handoffs.md) — cách chuyển quyền có giữ trạng thái
-- Tool, `ToolRuntime`, `AgentState`: [03-02](../03-agent-harness/03-02-tools.md)
+- [06-01 Tổng quan](./06-01-overview.md) — Subagents đối chiếu với bốn pattern còn lại
+- [06-05 Router](./06-05-router.md) — phân biệt supervisor với router (mục "Router vs Subagents")
+- [06-03 Handoffs](./06-03-handoffs.md) — cách chuyển quyền có giữ trạng thái
+- Tool, `ToolRuntime`, `AgentState`: [03-02](../03-harness/03-02-tools.md)
 - `Command`, `get_state`, interrupt, subgraph persistence: tài liệu LangGraph — `docs.langchain.com/oss/python/langgraph/`
 - Deep Agents (built-in subagent): `docs.langchain.com/oss/python/deepagents/subagents`

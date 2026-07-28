@@ -6,20 +6,24 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./test-01-tong-quan.md
-  - ./test-03-integration-testing.md
+  - ./08-01-testing-overview.md
+  - ./08-03-integration-testing.md
 ---
 
 # Unit testing (`GenericFakeChatModel`, `InMemorySaver`)
 
 > Kiểm thử logic của agent mà không gọi API: thay model thật bằng model giả và lưu trạng thái trong RAM.
-> Đây là cách nhanh, miễn phí, lặp lại được — bù lại chỉ kiểm được logic đã kịch bản hóa sẵn, không kiểm được model thật (phần đó xem [test-03](./test-03-integration-testing.md)).
+> Đây là cách nhanh, miễn phí, lặp lại được — bù lại chỉ kiểm được logic đã kịch bản hóa sẵn, không kiểm được model thật (phần đó xem [08-03](./08-03-integration-testing.md)).
 
 ---
 
 ## 1. Tổng quan
 
-Unit test đây nghĩa là tách từng mảnh nhỏ tất định của agent ra chạy riêng. Mấu chốt: thay LLM thật bằng một **bản giả trong RAM** (tài liệu gọi là *fixture*) mà mình tự viết kịch bản trả lời — từng câu chữ, từng tool call, từng lỗi. Nhờ vậy test chạy nhanh, không tốn tiền, không cần API key, và cho cùng kết quả mỗi lần chạy.
+Unit test là tách riêng phần logic của agent ra để kiểm, không đụng tới model thật. 
+
+Cách làm: thay model thật bằng một *mô hình giả do chính mình dựng*, đã ghi sẵn nó sẽ trả lời gì — nói câu nào, gọi tool nào, khi nào báo lỗi. 
+
+-> Vì mọi câu trả lời đều do mình định trước nên test chạy trong tích tắc, không tốn tiền, không cần API key, và lần nào chạy cũng ra kết quả y hệt.
 
 Hai công cụ được dùng: `GenericFakeChatModel` (giả model) và `InMemorySaver` (giả nơi lưu trạng thái).
 
@@ -29,50 +33,72 @@ Hai công cụ được dùng: `GenericFakeChatModel` (giả model) và `InMemor
 
 ### Khái niệm
 
-`GenericFakeChatModel` là một model giả nhận vào một iterator các câu trả lời và **trả về một câu mỗi lần gọi**. Mỗi phần tử là một `AIMessage` hoặc một chuỗi. Nó dùng được cả kiểu gọi thường lẫn kiểu chảy dần.
-
-### Vai trò
-
-Không có nó thì mỗi lần test phải gọi model thật: chậm, tốn tiền, và câu trả lời đổi mỗi lần chạy nên không khẳng định chính xác được. `GenericFakeChatModel` cho phép **cố định trước** model sẽ nói gì, để phần logic quanh model (agent điều phối tool, xử lý message) được kiểm một cách tất định.
+`GenericFakeChatModel` là model giả dùng để dựng sẵn phản hồi của model, hỗ trợ cho việc kiểm thử các quy trình phức tạp (chains), agent, và đặc biệt là tính năng gọi công cụ (tool calling / function calling) mà không cần tốn token hay gọi API thật.
 
 ### Áp dụng thực tế
 
 Bạn viết một agent tra cứu thời tiết. Bạn muốn kiểm: "khi model quyết định gọi tool `get_weather`, agent có chạy đúng tool và ráp kết quả vào không". Bạn không quan tâm model thật có gọi tool hay không — bạn cắm sẵn một câu trả lời chứa tool call, rồi khẳng định agent xử lý đúng. Test này chạy trong mili-giây, không tốn một đồng API nào.
 
 ### Triển khai
-
+ 
+Dựng một agent thời tiết rồi cắm model giả vào. Làm hai nhịp: chạy để xem nó đi thế nào, rồi biến thành test bằng vài dòng khẳng định.
+ 
+**Nhịp 1 — chạy để xem.**
+ 
 ```python
+from langchain.agents import create_agent
+from langchain.tools import tool
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
-
-model = GenericFakeChatModel(messages=iter([                                     # iter() biến list thành iterator: mỗi lần gọi lấy 1 phần tử
-    AIMessage(content="", tool_calls=[ToolCall(name="foo", args={"bar": "baz"}, id="call_1")]),  # phần tử 1: một AIMessage rỗng chữ nhưng có 1 tool call
-    "bar"                                                                        # phần tử 2: một chuỗi (sẽ được tự bọc thành AIMessage)
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages.tool import ToolCall
+ 
+@tool
+def get_weather(city: str):
+    """Tra thời tiết một thành phố."""
+    return f"{city}: 25 độ, nắng."
+ 
+# Model giả: soạn sẵn 2 câu cho tình huống "hỏi thời tiết SF"
+model = GenericFakeChatModel(messages=iter([
+    AIMessage(content="", tool_calls=[                       # câu 1: ra lệnh gọi get_weather cho "SF"
+        ToolCall(name="get_weather", args={"city": "SF"}, id="call_1")
+    ]),
+    "Ở SF đang 25 độ, nắng.",                                # câu 2: câu chốt cuối
 ]))
-
-model.invoke("hello")                                                            # chuỗi "hello" bị bỏ qua — fake không đọc input, chỉ nhả phần tử kế tiếp
+ 
+agent = create_agent(model, tools=[get_weather])
+kq = agent.invoke({"messages": [HumanMessage("Thời tiết ở SF thế nào?")]})
+ 
+print(kq["messages"][-1].content)                            # in câu trả lời cuối
 ```
-
-**Kết quả in ra** (tài liệu có sẵn):
-
+ 
+**Kết quả in ra** :
+ 
 ```
-AIMessage(content='', ..., tool_calls=[{'name': 'foo', 'args': {'bar': 'baz'}, 'id': 'call_1', 'type': 'tool_call'}])   ← đúng phần tử 1 của iter, bất kể "hello" là gì
+Ở SF đang 25 độ, nắng.
 ```
-
-Gọi lần nữa thì nó trả về phần tử tiếp theo trong iterator:
-
+ 
+Bên trong, `kq["messages"]` giữ lại cả quá trình — bốn message theo đúng thứ tự agent đã đi:
+ 
+```
+[
+  HumanMessage("Thời tiết ở SF thế nào?"),        ← câu hỏi vào
+  AIMessage("", tool_calls=[get_weather(SF)]),    ← câu 1 model giả: ra lệnh gọi tool
+  ToolMessage("SF: 25 độ, nắng."),                ← agent ĐÃ chạy get_weather thật → kết quả
+  AIMessage("Ở SF đang 25 độ, nắng."),            ← câu 2 model giả: chốt lại
+]
+```
+ 
+**Nhịp 2 — biến thành test.** Thay `print` bằng khẳng định để máy tự chấm đúng/sai:
+ 
 ```python
-model.invoke("hello, again!")                                                    # lần gọi thứ 2 → lấy phần tử 2
+tool_calls = kq["messages"][1].tool_calls                    # message thứ 2 là lượt model ra lệnh gọi tool
+ 
+assert tool_calls[0]["name"] == "get_weather"                # agent gọi ĐÚNG tool
+assert tool_calls[0]["args"] == {"city": "SF"}               # ĐÚNG tham số
+assert "25 độ" in kq["messages"][-1].content                 # kết quả tool đã ráp vào câu cuối
 ```
-
-**Kết quả in ra** (tài liệu có sẵn):
-
-```
-AIMessage(content='bar', ...)   ← phần tử 2; chuỗi "bar" đã được bọc thành AIMessage với content="bar"
-```
-
-**!Note:** Đoạn code trên **thiếu import** `AIMessage` và `ToolCall` — tài liệu không viết dòng import cho hai class này, người chạy thử phải tự thêm (thường là `from langchain_core.messages import AIMessage` và `from langchain_core.messages.tool import ToolCall`; đường dẫn chính xác cần đối chiếu khi chạy thử vì trang này không nêu).
-
-**!Note:** Iterator cạn thì hỏng. Vì dùng `iter()`, gọi model quá số phần tử đã nạp sẽ ném `StopIteration` — test dừng vì lỗi Python chứ không phải vì khẳng định sai. Đây là hệ quả trực tiếp của việc dùng iterator (căn cứ: `iter()` sinh iterator, đọc hết thì cạn), tài liệu không nói thẳng nhưng suy ra được. Nạp đủ số câu trả lời cho số lần agent sẽ gọi model.
+ 
+Ba dòng `assert` này chính là chỗ nói rõ **đang test** liệu **agent có nhận lệnh gọi tool, chạy đúng tool với đúng tham số, rồi ráp kết quả vào câu trả lời không**. S
 
 ---
 
@@ -124,18 +150,12 @@ agent.invoke(                                                                   
 ]}
 ```
 
-> **Về khối kết quả in ra ở mục này.** Trang tài liệu gốc **không in** kết quả cho ví dụ `InMemorySaver`. Khối trên tôi tự dựng lại từ cách checkpointer hoạt động (dồn message các lượt vào cùng `thread_id`). Cần đối chiếu khi chạy thử.
-
-**!Note:** Ví dụ này lẫn hai loại model. Comment trong tài liệu gốc nói "model trả về giờ GMT+10" như thể model tự suy ra múi giờ từ chữ "Sydney" — nhưng ở đây `model` là `GenericFakeChatModel`, nó chỉ nhả đúng câu đã kịch bản, **không tự tính** gì cả. Muốn test thật hành vi Sydney→GMT+10 thì phải kịch bản hóa sẵn câu trả lời lượt 2 của model giả cho đúng ý. Căn cứ: chính trang này (mục 2) định nghĩa model giả trả lời theo iterator cố định. Điểm này là chỗ ví dụ của tài liệu diễn đạt lỏng, không phải hành vi thực của `GenericFakeChatModel`.
-
-**!Note:** Đoạn trên cũng thiếu import `create_agent` và `HumanMessage` (tài liệu không viết) — người chạy thử tự thêm.
-
 ---
 
 ## Tham chiếu chéo
 
-- [test-01-tong-quan.md](./test-01-tong-quan.md) — vị trí unit test trong ba cách kiểm thử
-- [test-03-integration-testing.md](./test-03-integration-testing.md) — bước tiếp theo: kiểm với API model thật
+- [08-01 Testing — tổng quan](./08-01-testing-overview.md) — vị trí unit test trong ba cách kiểm thử
+- [08-03 Integration testing](./08-03-integration-testing.md) — bước tiếp theo: kiểm với API model thật
 - Tài liệu gốc: `https://docs.langchain.com/oss/python/langchain/test/unit-testing`
 - Tham chiếu `GenericFakeChatModel`: `https://reference.langchain.com/python/langchain-core/language_models/fake_chat_models/GenericFakeChatModel`
 - Tham chiếu `InMemorySaver`: `https://reference.langchain.com/python/langgraph/checkpoints/`

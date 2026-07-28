@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./memory.md
-  - ./short-term-memory.md
+  - ./04-01-memory.md
+  - ./04-02-short-term-memory.md
 ---
 
 # Long-term memory (`store`)
 
 > Trí nhớ sống qua nhiều cuộc hội thoại và nhiều phiên: gọi lại được từ thread bất kỳ, khác short-term ở chỗ short-term chỉ trong một thread.
-> Vì sao có hai loại và ba kiểu trí nhớ (semantic / episodic / procedural) — xem [memory](./memory.md). Nhớ trong một thread — xem [short-term-memory](./short-term-memory.md).
+> Vì sao có hai loại và ba kiểu trí nhớ (semantic / episodic / procedural) — xem [memory](./04-01-memory.md). Nhớ trong một thread — xem [short-term-memory](./04-02-short-term-memory.md).
 
 ---
 
@@ -222,6 +222,6 @@ Hai cái không loại trừ nhau: một agent gắn cả `checkpointer=` lẫn 
 
 ## 7. Tham chiếu chéo
 
-- [memory](./memory.md) — ba kiểu trí nhớ dài hạn và hai thời điểm ghi; phần "tại sao" mà trang này không bàn.
-- [short-term-memory](./short-term-memory.md) — đối chiếu trực tiếp: bên đó dữ liệu vào **state**, ở đây vào **store**.
+- [memory](./04-01-memory.md) — ba kiểu trí nhớ dài hạn và hai thời điểm ghi; phần "tại sao" mà trang này không bàn.
+- [short-term-memory](./04-02-short-term-memory.md) — đối chiếu trực tiếp: bên đó dữ liệu vào **state**, ở đây vào **store**.
 - Trang tài liệu khác được nêu tên trong nguồn (chưa nghiên cứu ở đây): LangGraph stores (`/oss/python/langgraph/stores`), Persistence.

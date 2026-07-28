@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./04-01-multi-agent-overview.md
-  - ./04-02-subagents.md
+  - ./06-01-overview.md
+  - ./06-02-subagents.md
 ---
 
 # Skills (`@tool` nạp prompt chuyên biệt)
@@ -100,8 +100,8 @@ Khi tự viết cài đặt riêng, có ba cách mở rộng pattern cơ bản.
 
 ## Tham chiếu chéo
 
-- [04-01 Tổng quan](./04-01-multi-agent-overview.md) — Skills đối chiếu bốn pattern còn lại (chú ý: ít lần gọi model nhưng token cao do ngữ cảnh tích tụ)
-- [04-02 Subagents](./04-02-subagents.md) — mục "tìm agent qua tool" cũng dùng hé lộ dần, cùng ý tưởng
-- Tool: [03-02](../03-agent-harness/03-02-tools.md)
+- [06-01 Tổng quan](./06-01-overview.md) — Skills đối chiếu bốn pattern còn lại (chú ý: ít lần gọi model nhưng token cao do ngữ cảnh tích tụ)
+- [06-02 Subagents](./06-02-subagents.md) — mục "tìm agent qua tool" cũng dùng hé lộ dần, cùng ý tưởng
+- Tool: [03-02](../03-harness/03-02-tools.md)
 - Deep Agents (built-in skill): `docs.langchain.com/oss/python/deepagents/skills`
 - LangChain Skills (kho skill sẵn dùng): `github.com/langchain-ai/langchain-skills`

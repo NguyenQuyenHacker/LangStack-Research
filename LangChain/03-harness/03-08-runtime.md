@@ -6,9 +6,9 @@ version: "unknown"
 status: draft
 lab:
 related:
-  - ./middleware.md
-  - ./tools.md
-  - ./long-term-memory.md
+  - ./03-03-middleware/03-03-middleware-overview.md
+  - ./03-02-tools.md
+  - ../04-context-memory/04-03-long-term-memory.md
 ---
 
 # Runtime — tiêm phụ thuộc vào agent lúc chạy (`Runtime`, `ToolRuntime`)
@@ -212,8 +212,8 @@ Hai dòng này in được chắc chắn vì chuỗi ghép thẳng từ `user_na
 
 ## Tham chiếu chéo
 
-- [middleware.md](./middleware.md) — phân biệt hook kiểu node và kiểu wrap, và `ModelRequest`
-- [tools.md](./tools.md) — cách viết tool và tham số `ToolRuntime`
-- [long-term-memory.md](./long-term-memory.md) — cơ chế `store` (`BaseStore`) mà tool đọc ở mục 3
+- [03-03 Middleware](./03-03-middleware/03-03-middleware-overview.md) — phân biệt hook kiểu node và kiểu wrap, và `ModelRequest`
+- [03-02 Tools](./03-02-tools.md) — cách viết tool và tham số `ToolRuntime`
+- [04-03 Long-term memory](../04-context-memory/04-03-long-term-memory.md) — cơ chế `store` (`BaseStore`) mà tool đọc ở mục 3
 - Custom stream (`"custom"` mode): `https://docs.langchain.com/oss/python/langchain/streaming#custom-updates`
 - Runtime API reference: `https://reference.langchain.com/python/langgraph/runtime/Runtime`

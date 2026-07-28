@@ -7,14 +7,14 @@ status: draft
 lab:
 related:
   - ./03-02-tools.md
-  - ./03-03-middleware-overview.md
-  - ./03-04-middleware-built-in.md
+  - ./03-03-middleware/03-03-middleware-overview.md
+  - ./03-03-middleware/03-04-middleware-built-in.md
 ---
 
 # Context engineering
 
 > Khung tư duy để trả lời một câu hỏi duy nhất: *tại mỗi bước của agent, cái gì được đưa vào cho LLM, và lấy từ đâu.*
-> Đây là trang khái niệm đầu mối — phần cơ chế nằm ở các trang [middleware](./03-03-middleware-overview.md) và [tools](./03-02-tools.md), trang này chỉ ráp các mảnh lại.
+> Đây là trang khái niệm đầu mối — phần cơ chế nằm ở các trang [middleware](./03-03-middleware/03-03-middleware-overview.md) và [tools](./03-02-tools.md), trang này chỉ ráp các mảnh lại.
 
 ---
 
@@ -67,7 +67,7 @@ Phân biệt nhanh: **Runtime Context** là thứ cố định bạn nạp vào 
 
 **middleware** là cơ chế khiến context engineering làm được trong thực tế. Đây là một lớp bạn gắn vào để móc (hook) vào bất kỳ bước nào của vòng đời agent, rồi làm một trong hai việc: **cập nhật context**, hoặc **nhảy sang một bước khác** trong vòng đời. Xuyên suốt trang, mọi ví dụ đều dùng API middleware như phương tiện để đạt mục đích context engineering.
 
-Cơ chế chi tiết của middleware nằm ở [trang middleware](./03-03-middleware-overview.md), trang này chỉ dùng nó.
+Cơ chế chi tiết của middleware nằm ở [trang middleware](./03-03-middleware/03-03-middleware-overview.md), trang này chỉ dùng nó.
 
 ### Ví dụ nhỏ nhất
 
@@ -318,15 +318,15 @@ agent = create_agent(
 
 Khi hội thoại vượt ngưỡng token, `SummarizationMiddleware` tự động: tóm tắt các tin nhắn cũ bằng một lệnh gọi LLM riêng, thay chúng bằng một tin nhắn tóm tắt trong State (vĩnh viễn), và giữ nguyên các tin nhắn gần đây. Từ đó về sau các lượt sẽ thấy bản tóm tắt thay vì tin nhắn gốc.
 
-Danh sách đầy đủ middleware dựng sẵn, các hook có thể móc vào, và cách viết middleware riêng nằm ở [trang middleware](./03-04-middleware-built-in.md).
+Danh sách đầy đủ middleware dựng sẵn, các hook có thể móc vào, và cách viết middleware riêng nằm ở [trang middleware](./03-03-middleware/03-04-middleware-built-in.md).
 
 ---
 
 ## Tham chiếu chéo
 
 - [03-02-tools.md](./03-02-tools.md) — định nghĩa tool, `ToolRuntime`, đọc/ghi state–store–runtime context, dynamic tool selection (mục 2.3 và 3 của file này chỉ giới thiệu, chi tiết ở đó)
-- [03-03-middleware-overview.md](./03-03-middleware-overview.md) — cơ chế middleware, `wrap_model_call`, `dynamic_prompt` (nền cho toàn bộ ví dụ ở file này)
-- [03-04-middleware-built-in.md](./03-04-middleware-built-in.md) — danh sách middleware dựng sẵn, gồm `SummarizationMiddleware` ở mục 4
-- [03-05-middleware-custom.md](./03-05-middleware-custom.md) — State updates: cách sửa persistent từ `wrap_model_call` (liên quan !Note mục 2.2)
+- [03-03-middleware-overview.md](./03-03-middleware/03-03-middleware-overview.md) — cơ chế middleware, `wrap_model_call`, `dynamic_prompt` (nền cho toàn bộ ví dụ ở file này)
+- [03-04-middleware-built-in.md](./03-03-middleware/03-04-middleware-built-in.md) — danh sách middleware dựng sẵn, gồm `SummarizationMiddleware` ở mục 4
+- [03-05-middleware-custom.md](./03-03-middleware/03-05-middleware-custom.md) — State updates: cách sửa persistent từ `wrap_model_call` (liên quan !Note mục 2.2)
 - Trang models của tài liệu gốc (`docs.langchain.com/oss/python/langchain/models`) — Dynamic model selection; **chưa có file tương ứng trong bộ, cần bổ sung**
 - Trang concept context (`docs.langchain.com/oss/python/concepts/context`) — phân loại các loại context và khi nào dùng; tài liệu gốc khuyên đọc trước trang này

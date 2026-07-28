@@ -6,11 +6,11 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./04-02-subagents.md
-  - ./04-03-handoffs.md
-  - ./04-04-skills.md
-  - ./04-05-router.md
-  - ./04-06-custom-workflow.md
+  - ./06-02-subagents.md
+  - ./06-03-handoffs.md
+  - ./06-04-skills.md
+  - ./06-05-router.md
+  - ./06-06-custom-workflow.md
 ---
 
 # Multi-agent — tổng quan
@@ -28,7 +28,7 @@ Không phải việc phức tạp nào cũng cần đến nó — một agent đ
 - **Phát triển phân tán** — nhiều nhóm tự dựng và bảo trì từng năng lực độc lập, rồi ghép lại thành hệ lớn với ranh giới rõ ràng.
 - **Chạy song song** — sinh ra nhiều worker chuyên biệt cho các việc con và chạy đồng thời cho nhanh.
 
-Multi-agent đáng dùng nhất khi: một agent đơn có quá nhiều [tool](../03-agent-harness/03-02-tools.md) và chọn sai tool; hoặc việc cần kiến thức chuyên biệt với ngữ cảnh dày (prompt dài, tool riêng ngành); hoặc cần ép ràng buộc tuần tự — chỉ mở khóa năng lực sau khi thỏa điều kiện nào đó.
+Multi-agent đáng dùng nhất khi: một agent đơn có quá nhiều [tool](../03-harness/03-02-tools.md) và chọn sai tool; hoặc việc cần kiến thức chuyên biệt với ngữ cảnh dày (prompt dài, tool riêng ngành); hoặc cần ép ràng buộc tuần tự — chỉ mở khóa năng lực sau khi thỏa điều kiện nào đó.
 
 Trung tâm của mọi thiết kế multi-agent là **context engineering** — quyết định mỗi agent được thấy thông tin gì. Chất lượng cả hệ phụ thuộc vào việc từng agent có đúng dữ liệu cho việc của nó hay không.
 
@@ -40,11 +40,11 @@ Trung tâm của mọi thiết kế multi-agent là **context engineering** — 
 
 | Pattern | Cách vận hành | File |
 |---|---|---|
-| **Subagents** | Một agent chính điều phối các agent con bằng cách gọi chúng như tool. Mọi định tuyến đi qua agent chính; nó quyết khi nào và gọi agent con nào. | [04-02](./04-02-subagents.md) |
-| **Handoffs** | Hành vi đổi động theo trạng thái. Lệnh gọi tool cập nhật một biến trạng thái, biến đó kích hoạt định tuyến hoặc đổi cấu hình — chuyển sang agent khác hoặc chỉnh tool/prompt của agent hiện tại. | [04-03](./04-03-handoffs.md) |
-| **Skills** | Prompt và kiến thức chuyên biệt được nạp khi cần. Một agent duy nhất giữ quyền điều khiển, nạp thêm ngữ cảnh từ các skill lúc cần. | [04-04](./04-04-skills.md) |
-| **Router** | Một bước phân loại đầu vào rồi hướng nó tới một hoặc nhiều agent chuyên biệt. Kết quả được tổng hợp lại thành một câu trả lời. | [04-05](./04-05-router.md) |
-| **Custom workflow** | Tự dựng luồng chạy riêng bằng LangGraph, trộn logic tất định với hành vi agentic. Nhúng các pattern khác vào làm chặng trong luồng của mình. | [04-06](./04-06-custom-workflow.md) |
+| **Subagents** | Một agent chính điều phối các agent con bằng cách gọi chúng như tool. Mọi định tuyến đi qua agent chính; nó quyết khi nào và gọi agent con nào. | [06-02](./06-02-subagents.md) |
+| **Handoffs** | Hành vi đổi động theo trạng thái. Lệnh gọi tool cập nhật một biến trạng thái, biến đó kích hoạt định tuyến hoặc đổi cấu hình — chuyển sang agent khác hoặc chỉnh tool/prompt của agent hiện tại. | [06-03](./06-03-handoffs.md) |
+| **Skills** | Prompt và kiến thức chuyên biệt được nạp khi cần. Một agent duy nhất giữ quyền điều khiển, nạp thêm ngữ cảnh từ các skill lúc cần. | [06-04](./06-04-skills.md) |
+| **Router** | Một bước phân loại đầu vào rồi hướng nó tới một hoặc nhiều agent chuyên biệt. Kết quả được tổng hợp lại thành một câu trả lời. | [06-05](./06-05-router.md) |
+| **Custom workflow** | Tự dựng luồng chạy riêng bằng LangGraph, trộn logic tất định với hành vi agentic. Nhúng các pattern khác vào làm chặng trong luồng của mình. | [06-06](./06-06-custom-workflow.md) |
 
 Các pattern trộn được với nhau: một kiến trúc **subagents** có thể gọi tool là một **custom workflow** hoặc một **router**; agent con lại có thể dùng **skills** để nạp ngữ cảnh khi cần.
 
@@ -162,7 +162,7 @@ Diễn giải ngắn:
 - Cần **song song** hoặc **mảng ngữ cảnh lớn** → Subagents hoặc Router.
 - Cần **nói trực tiếp với người dùng qua nhiều bước, ép thứ tự** → Handoffs.
 - Cần **một agent gọn, nhiều chuyên môn nạp khi cần** → Skills.
-- Cần **luồng riêng trộn tất định với agentic** → Custom workflow (xem [04-06](./04-06-custom-workflow.md)).
+- Cần **luồng riêng trộn tất định với agentic** → Custom workflow (xem [06-06](./06-06-custom-workflow.md)).
 
 > Muốn built-in đầy đủ (agent con, skill, lập kế hoạch, hệ thống file ảo, quản lý ngữ cảnh) mà không tự dựng thì tài liệu trỏ sang [**Deep Agents**](https://docs.langchain.com/oss/python/deepagents/overview) — một harness cấp cao hơn dựng trên LangChain. Deep Agents không nằm trong phạm vi mục này.
 
@@ -170,11 +170,11 @@ Diễn giải ngắn:
 
 ## Tham chiếu chéo
 
-- [04-02 Subagents](./04-02-subagents.md) — agent chính điều phối agent con qua tool
-- [04-03 Handoffs](./04-03-handoffs.md) — đổi hành vi theo biến trạng thái
-- [04-04 Skills](./04-04-skills.md) — nạp prompt/kiến thức chuyên biệt khi cần
-- [04-05 Router](./04-05-router.md) — phân loại rồi hướng tới agent chuyên biệt
-- [04-06 Custom workflow](./04-06-custom-workflow.md) — tự dựng luồng bằng LangGraph
-- Tool: [03-02](../03-agent-harness/03-02-tools.md)
+- [06-02 Subagents](./06-02-subagents.md) — agent chính điều phối agent con qua tool
+- [06-03 Handoffs](./06-03-handoffs.md) — đổi hành vi theo biến trạng thái
+- [06-04 Skills](./06-04-skills.md) — nạp prompt/kiến thức chuyên biệt khi cần
+- [06-05 Router](./06-05-router.md) — phân loại rồi hướng tới agent chuyên biệt
+- [06-06 Custom workflow](./06-06-custom-workflow.md) — tự dựng luồng bằng LangGraph
+- Tool: [03-02](../03-harness/03-02-tools.md)
 - Deep Agents (ngoài phạm vi): `docs.langchain.com/oss/python/deepagents/overview`
 - Context engineering: `docs.langchain.com/oss/python/langchain/context-engineering`

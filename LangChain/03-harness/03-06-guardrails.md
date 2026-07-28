@@ -6,15 +6,15 @@ version: "unknown"
 status: draft
 lab:
 related:
-  - ./middleware.md
-  - ./human-in-the-loop.md
-  - ./event-streaming.md
+  - ./03-03-middleware/03-03-middleware-overview.md
+  - ./03-07-human-in-the-loop.md
+  - ../02-model-layer/02-05-event-streaming.md
 ---
 
 # Guardrails — chốt kiểm soát an toàn cho agent
 
 > Guardrails là lớp kiểm tra và lọc nội dung đặt tại các điểm mốc trong lúc agent chạy, để chặn rò rỉ dữ liệu nhạy cảm, chặn nội dung độc hại và ép tuân thủ quy tắc nghiệp vụ trước khi hậu quả xảy ra.
-> Tất cả guardrails ở đây đều dựng bằng **middleware** — cơ chế chèn xử lý vào giữa luồng chạy của agent. Cách hoạt động của middleware nằm ở trang riêng: [middleware.md](./middleware.md).
+> Tất cả guardrails ở đây đều dựng bằng **middleware** — cơ chế chèn xử lý vào giữa luồng chạy của agent. Cách hoạt động của middleware nằm ở trang riêng: [03-03 Middleware](./03-03-middleware/03-03-middleware-overview.md).
 
 ---
 
@@ -211,7 +211,7 @@ result = agent.invoke(                              # lần gọi 2: gửi quy�
 )
 ```
 
-**Kết quả** (dựng lại): lần gọi 1 không chạy `send_email` mà trả về một tín hiệu dừng (interrupt) chờ người duyệt. Lần gọi 2 truyền `Command(resume=...)` với cùng `thread_id`, agent nối lại phiên cũ và chạy tiếp `send_email`. Hình dạng chính xác của tín hiệu dừng và các loại quyết định ngoài `approve` không nằm trong trang này — xem [human-in-the-loop.md](./human-in-the-loop.md).
+**Kết quả** (dựng lại): lần gọi 1 không chạy `send_email` mà trả về một tín hiệu dừng (interrupt) chờ người duyệt. Lần gọi 2 truyền `Command(resume=...)` với cùng `thread_id`, agent nối lại phiên cũ và chạy tiếp `send_email`. Hình dạng chính xác của tín hiệu dừng và các loại quyết định ngoài `approve` không nằm trong trang này — xem [03-07 Human-in-the-loop](./03-07-human-in-the-loop.md).
 
 **!Note:** Thiếu `checkpointer` thì không dừng-rồi-chạy-tiếp được, vì không có nơi lưu trạng thái giữa hai lần gọi. Và hai lần gọi phải cùng `thread_id`; sai `thread_id` thì lần 2 không tìm thấy phiên đang dừng để nối lại.
 
@@ -293,7 +293,7 @@ result["messages"][-1].content = "I cannot process requests ..."   ← câu tr�
 agent không chạy, không gọi model                                  ← jump_to="end" cắt luồng ngay
 ```
 
-**!Note:** `jump_to: "end"` và `can_jump_to=["end"]` là cơ chế điều hướng của middleware, không giải thích ở trang này — xem [middleware.md](./middleware.md). Bỏ `can_jump_to=["end"]` trong `hook_config` mà vẫn trả `"jump_to": "end"` thì lệnh nhảy có khả năng không được cho phép — cần chạy thử để xác nhận hành vi.
+**!Note:** `jump_to: "end"` và `can_jump_to=["end"]` là cơ chế điều hướng của middleware, không giải thích ở trang này — xem [03-03 Middleware](./03-03-middleware/03-03-middleware-overview.md). Bỏ `can_jump_to=["end"]` trong `hook_config` mà vẫn trả `"jump_to": "end"` thì lệnh nhảy có khả năng không được cho phép — cần chạy thử để xác nhận hành vi.
 
 ### 5.2 Kiểm sau agent — soát câu trả lời cuối (`after_agent`)
 
@@ -390,8 +390,8 @@ Ba nhóm này không loại trừ nhau. Cách dùng thực tế là xếp chồn
 
 ## Tham chiếu chéo
 
-- [middleware.md](./middleware.md) — cơ chế middleware, các điểm chèn, và `jump_to` / `can_jump_to`
-- [human-in-the-loop.md](./human-in-the-loop.md) — hình dạng tín hiệu dừng và các loại quyết định duyệt
+- [03-03 Middleware](./03-03-middleware/03-03-middleware-overview.md) — cơ chế middleware, các điểm chèn, và `jump_to` / `can_jump_to`
+- [03-07 Human-in-the-loop](./03-07-human-in-the-loop.md) — hình dạng tín hiệu dừng và các loại quyết định duyệt
 - [event-streaming.md](./event-streaming.md#register-transformers-on-middleware) — stream transformer mà `apply_to_output=True` dùng để che dữ liệu gửi dần
 - Middleware API reference: `https://reference.langchain.com/python/langchain/middleware/`
 - Testing agents: `https://docs.langchain.com/oss/python/langchain/test/`

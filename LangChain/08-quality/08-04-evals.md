@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./test-01-tong-quan.md
-  - ./test-03-integration-testing.md
+  - ./08-01-testing-overview.md
+  - ./08-03-integration-testing.md
 ---
 
 # Agent Evals (`agentevals`)
 
 > Chấm điểm agent bằng cách đánh giá quỹ đạo thực thi (trajectory) — chuỗi message và tool call nó sinh ra — theo hai hướng: đối chiếu tất định hoặc để LLM chấm.
-> Khác [integration test](./test-03-integration-testing.md) ở chỗ không chỉ kiểm đúng/sai cơ bản mà chấm điểm hành vi theo một mốc chuẩn hoặc thang đánh giá, để bắt hồi quy khi đổi prompt/tool/model.
+> Khác [integration test](./08-03-integration-testing.md) ở chỗ không chỉ kiểm đúng/sai cơ bản mà chấm điểm hành vi theo một mốc chuẩn hoặc thang đánh giá, để bắt hồi quy khi đổi prompt/tool/model.
 > URL bạn đưa (`/langchain/evals`) trỏ chuyển sang trang chuẩn này (`/langchain/test/evals`); tên trang gốc là "Agent Evals".
 
 ---
@@ -314,8 +314,8 @@ Trang này nêu **hai cách** chạy eval trên LangSmith: tích hợp `pytest`,
 
 ## Tham chiếu chéo
 
-- [test-01-tong-quan.md](./test-01-tong-quan.md) — vị trí evals trong ba cách kiểm thử
-- [test-03-integration-testing.md](./test-03-integration-testing.md) — mục 4 (khẳng định theo cấu trúc) trỏ sang các evaluator ở file này
+- [08-01 Testing — tổng quan](./08-01-testing-overview.md) — vị trí evals trong ba cách kiểm thử
+- [08-03 Integration testing](./08-03-integration-testing.md) — mục 4 (khẳng định theo cấu trúc) trỏ sang các evaluator ở file này
 - Tài liệu gốc: `https://docs.langchain.com/oss/python/langchain/test/evals`
 - Repo `agentevals` (chi tiết `tool_args_match_mode`, LLM-as-judge): `https://github.com/langchain-ai/agentevals`
 - Phần LangSmith (chưa nghiên cứu): `/langsmith/pytest`, `/langsmith/manage-datasets`

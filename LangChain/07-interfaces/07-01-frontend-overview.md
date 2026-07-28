@@ -6,13 +6,13 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./frontend-patterns.md
-  - ./frontend-integrations.md
+  - ./07-02-frontend-patterns.md
+  - ./07-03-frontend-integrations.md
 ---
 
 # Frontend — tổng quan
 
-> Mảng "Frontend" trong tài liệu LangChain nói về cách dựng giao diện web cho một agent: agent chạy ở backend, giao diện nhận trạng thái agent theo thời gian thực và vẽ ra màn hình. Đây là trang gốc; hai nhánh con là [Patterns](./frontend-patterns.md) và [Integrations](./frontend-integrations.md).
+> Mảng "Frontend" trong tài liệu LangChain nói về cách dựng giao diện web cho một agent: agent chạy ở backend, giao diện nhận trạng thái agent theo thời gian thực và vẽ ra màn hình. Đây là trang gốc; hai nhánh con là [Patterns](./07-02-frontend-patterns.md) và [Integrations](./07-03-frontend-integrations.md).
 
 ---
 
@@ -55,14 +55,14 @@ Ranh giới quan trọng: backend giữ logic, frontend chỉ nhận trạng th�
 
 Trang gốc chia mảng Frontend thành hai nhánh lớn. Đây chỉ là bản đồ; nội dung chi tiết ở hai file kia.
 
-**Patterns — các mẫu dựng sẵn cho từng nhu cầu giao diện.** Tài liệu gom 11 pattern thành bốn nhóm: hiển thị tin nhắn và kết quả, hiển thị hành động của agent, quản lý hội thoại, và streaming nâng cao. Xem [frontend-patterns.md](./frontend-patterns.md).
+**Patterns — các mẫu dựng sẵn cho từng nhu cầu giao diện.** Tài liệu gom 11 pattern thành bốn nhóm: hiển thị tin nhắn và kết quả, hiển thị hành động của agent, quản lý hội thoại, và streaming nâng cao. Xem [07-02 Frontend patterns](./07-02-frontend-patterns.md).
 
-**Integrations — nối `useStream` vào các thư viện giao diện có sẵn.** `useStream` không phụ thuộc thư viện vẽ nào, nên có thể cắm vào các bộ component AI chat hoặc framework generative UI của bên thứ ba. Xem [frontend-integrations.md](./frontend-integrations.md).
+**Integrations — nối `useStream` vào các thư viện giao diện có sẵn.** `useStream` không phụ thuộc thư viện vẽ nào, nên có thể cắm vào các bộ component AI chat hoặc framework generative UI của bên thứ ba. Xem [07-03 Frontend integrations](./07-03-frontend-integrations.md).
 
 ---
 
 ## Tham chiếu chéo
 
-- [frontend-patterns.md](./frontend-patterns.md) — 11 mẫu dựng giao diện, mỗi mẫu lấy một trạng thái từ `useStream`
-- [frontend-integrations.md](./frontend-integrations.md) — bốn thư viện bên thứ ba cắm vào `useStream`
+- [07-02 Frontend patterns](./07-02-frontend-patterns.md) — 11 mẫu dựng giao diện, mỗi mẫu lấy một trạng thái từ `useStream`
+- [07-03 Frontend integrations](./07-03-frontend-integrations.md) — bốn thư viện bên thứ ba cắm vào `useStream`
 - Trang gốc: `https://docs.langchain.com/oss/python/langchain/frontend/overview`

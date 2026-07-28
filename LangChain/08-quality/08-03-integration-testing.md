@@ -6,15 +6,15 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./test-01-tong-quan.md
-  - ./test-02-unit-testing.md
-  - ./test-04-evals.md
+  - ./08-01-testing-overview.md
+  - ./08-02-unit-testing.md
+  - ./08-04-evals.md
 ---
 
 # Integration testing
 
 > Kiểm thử agent với API model thật: tách khỏi unit test, quản API key, khẳng định theo cấu trúc, kiểm soát chi phí, và ghi lại/phát lại lời gọi HTTP.
-> Khác [unit test](./test-02-unit-testing.md) ở chỗ gọi mạng thật; khác [evals](./test-04-evals.md) ở chỗ chỉ kiểm đúng/sai cơ bản chứ không chấm điểm chất lượng.
+> Khác [unit test](./08-02-unit-testing.md) ở chỗ gọi mạng thật; khác [evals](./08-04-evals.md) ở chỗ chỉ kiểm đúng/sai cơ bản chứ không chấm điểm chất lượng.
 
 ---
 
@@ -134,10 +134,6 @@ load_dotenv()                                                                   
 
 Câu trả lời LLM đổi mỗi lần chạy. Vì vậy đừng khẳng định "output phải bằng chuỗi X". Thay vào đó kiểm các **tính chất cấu trúc**: loại message, tên tool được gọi, hình dạng tham số, số lượng message.
 
-### Vai trò
-
-Khẳng định theo chuỗi chính xác sẽ hỏng ngay lần chạy sau vì model diễn đạt khác đi, dù hành vi vẫn đúng. Khẳng định theo cấu trúc bắt được cái thật sự cần kiểm (agent có gọi đúng tool không) mà không vỡ vì chữ nghĩa thay đổi.
-
 ### Áp dụng thực tế
 
 Bạn cần chắc agent gọi tool `get_weather` khi được hỏi thời tiết. Câu chốt cuối của model có thể là "It's sunny, 75°F" hôm nay và "Currently 75 degrees and clear" ngày mai — cả hai đều đúng. Nên bạn kiểm "có tool call tên `get_weather` không" và "message cuối là `AIMessage` và có nội dung", chứ không so từng chữ.
@@ -166,7 +162,7 @@ def test_agent_calls_weather_tool():
 
 **!Note:** `hasattr(msg, "tool_calls")` và `msg.tool_calls or []` là để phòng hai loại message khác nhau: message của người dùng / của tool không có `tool_calls`, và ngay message của model cũng có thể để `tool_calls = None` khi không gọi tool nào. Bỏ hai lớp phòng này thì test nổ `AttributeError` hoặc `TypeError` với input hợp lệ.
 
-Với khẳng định quỹ đạo chặt chẽ hơn (khớp theo thứ tự, theo tập con...), dùng bộ evaluator của AgentEvals — xem [test-04](./test-04-evals.md).
+Với khẳng định quỹ đạo chặt chẽ hơn (khớp theo thứ tự, theo tập con...), dùng bộ evaluator của AgentEvals — xem [08-04](./08-04-evals.md).
 
 ---
 
@@ -178,11 +174,17 @@ Integration test gọi API thật nên tốn tiền và thời gian thật. Bố
 
 ### Vai trò
 
-Bộ test phình to thì mỗi lần chạy CI vừa lâu vừa đắt, đến mức người ta ngại chạy. Bốn cách dưới giữ cho bộ test đủ rẻ để chạy đều.
+Bộ test phình to thì mỗi lần chạy CI vừa lâu vừa đắt . Bốn cách dưới giữ cho bộ test đủ rẻ để chạy đều.
 
 ### Bốn cách tài liệu nêu
 
-Dùng **model nhỏ hơn** cho test chỉ cần kiểm việc gọi tool và cấu trúc câu trả lời (tài liệu nêu `gemini-3.1-flash-lite` hoặc tương đương). Chặn **độ dài câu trả lời** để tránh completion dài, đắt. **Giới hạn phạm vi** — mỗi test một hành vi, tránh kịch bản đầu-cuối xâu nhiều lời gọi model khi một lượt là đủ. **Chạy có chọn lọc** — tận dụng cách tách ở mục 2 để integration test chỉ chạy trong CI hoặc trước deploy, không chạy mỗi lần lưu file.
+- Dùng **model nhỏ hơn** cho test chỉ cần kiểm việc gọi tool và cấu trúc câu trả lời (tài liệu nêu `gemini-3.1-flash-lite` hoặc tương đương). 
+
+- Chặn **độ dài câu trả lời** để tránh completion dài, đắt. 
+
+- **Giới hạn phạm vi** — mỗi test một hành vi, tránh kịch bản đầu-cuối xâu nhiều lời gọi model khi một lượt là đủ. 
+
+- **Chạy có chọn lọc** — tận dụng cách tách ở mục 2 để integration test chỉ chạy trong CI hoặc trước deploy, không chạy mỗi lần lưu file.
 
 ### Triển khai
 
@@ -193,8 +195,6 @@ agent = create_agent(
     model_kwargs={"max_tokens": 256},                                            # chặn câu trả lời ở 256 token → không có completion dài đắt
 )
 ```
-
-**!Note:** Tài liệu tự lệch tên tham số ở đây: đoạn văn viết "Set `maxTokens`" (kiểu camelCase) nhưng code lại dùng `max_tokens` (snake_case) đặt trong `model_kwargs`. Trong Python của LangChain, snake_case là dạng đúng — bám theo code, bỏ qua chữ `maxTokens` trong prose. Điểm này cần đối chiếu khi chạy thử với đúng nhà cung cấp model.
 
 ---
 
@@ -280,8 +280,8 @@ Lần chạy đầu gọi mạng thật và sinh file cassette trong `tests/cass
 
 ## Tham chiếu chéo
 
-- [test-01-tong-quan.md](./test-01-tong-quan.md) — vị trí integration test trong ba cách kiểm thử
-- [test-02-unit-testing.md](./test-02-unit-testing.md) — cách kiểm không gọi mạng, để đối chiếu
-- [test-04-evals.md](./test-04-evals.md) — bước tiếp theo: chấm điểm quỹ đạo (khớp theo thứ tự, tập con...)
+- [08-01 Testing — tổng quan](./08-01-testing-overview.md) — vị trí integration test trong ba cách kiểm thử
+- [08-02 Unit testing](./08-02-unit-testing.md) — cách kiểm không gọi mạng, để đối chiếu
+- [08-04 Evals](./08-04-evals.md) — bước tiếp theo: chấm điểm quỹ đạo (khớp theo thứ tự, tập con...)
 - Tài liệu gốc: `https://docs.langchain.com/oss/python/langchain/test/integration-testing`
 - Hạ tầng test khi đóng góp cho chính LangChain: `https://docs.langchain.com/oss/python/contributing/code#running-tests`

@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab: ../labs/lab-04-multi-agent-handoff/
 related:
-  - ./04-01-multi-agent-overview.md
-  - ./04-02-subagents.md
-  - ./04-05-router.md
+  - ./06-01-overview.md
+  - ./06-02-subagents.md
+  - ./06-05-router.md
 ---
 
 # Handoffs (`Command` cập nhật biến trạng thái)
 
-> Pattern để **chuyển giao quyền điều khiển** trong một cuộc trò chuyện — chuyển sang agent khác, hoặc cho chính agent đang chạy đổi sang giai đoạn khác. Điểm chốt: các agent ngang hàng, không có agent chính điều phối như [Subagents](./04-02-subagents.md).
+> Pattern để **chuyển giao quyền điều khiển** trong một cuộc trò chuyện — chuyển sang agent khác, hoặc cho chính agent đang chạy đổi sang giai đoạn khác. Điểm chốt: các agent ngang hàng, không có agent chính điều phối như [Subagents](./06-02-subagents.md).
 > Từ **handoffs** do [OpenAI](https://openai.github.io/openai-agents-python/handoffs/) đặt, chỉ việc dùng một lệnh gọi tool (kiểu `transfer_to_sales_agent`) để trao quyền giữa các agent hoặc giữa các trạng thái.
 
 ---
@@ -104,7 +104,7 @@ Hands sử dụng tốt nhất trong 3 trường hợp sau:
 
 **Khái niệm.** Chỉ có một agent. Nó không chuyển sang agent nào; nó **tự đổi prompt và bộ tool của chính mình** theo biến trạng thái. Cái quyết định đổi ra sao là một lớp trung gian gọi là **middleware**.
 
-Middleware là lớp chen giữa agent và model, chặn mỗi lần agent chuẩn bị gọi model để chỉnh cấu hình. Cơ chế đầy đủ của middleware nằm ở file [03-03](../03-agent-harness/03-03-middleware-overview.md); ở đây chỉ cần biết nó dùng hook `wrap_model_call` để sửa prompt và tool ngay trước khi gọi model.
+Middleware là lớp chen giữa agent và model, chặn mỗi lần agent chuẩn bị gọi model để chỉnh cấu hình. Cơ chế đầy đủ của middleware nằm ở file [03-03](../03-harness/03-03-middleware/03-03-middleware-overview.md); ở đây chỉ cần biết nó dùng hook `wrap_model_call` để sửa prompt và tool ngay trước khi gọi model.
 
 **Vai trò.** Vì chỉ có một agent, lịch sử tin nhắn chảy tự nhiên, không phải tự tay quyết tin nhắn nào truyền đi — nên gọn hơn kiểu B nhiều.
 
@@ -167,7 +167,7 @@ agent = create_agent(
 
 **!Note:** `checkpointer` là bắt buộc ở kiểu này. Không có nó, `current_step` không sống qua lượt — mỗi lượt lại về `triage`, agent chạy trơn tru nhưng mãi không chuyển bước. Lỗi im lặng — code chạy nhưng sai.
 
-**!Note:** `wrap_model_call`, `ModelRequest`, `ModelResponse` là cơ chế middleware, thuộc file [03-03](../03-agent-harness/03-03-middleware-overview.md). Đường dẫn import chính xác cần đối chiếu file đó, không suy từ trang này.
+**!Note:** `wrap_model_call`, `ModelRequest`, `ModelResponse` là cơ chế middleware, thuộc file [03-03](../03-harness/03-03-middleware/03-03-middleware-overview.md). Đường dẫn import chính xác cần đối chiếu file đó, không suy từ trang này.
 
 ---
 
@@ -230,11 +230,11 @@ Thiếu cặp này, agent nhận thấy cuộc trò chuyện dở dang và có t
 
 ## Tham chiếu chéo
 
-- [04-01 Tổng quan](./04-01-multi-agent-overview.md) — Handoffs đối chiếu bốn pattern còn lại (chú ý: kém khi cần chạy song song nhiều mảng)
-- [04-02 Subagents](./04-02-subagents.md) — khác biệt: Subagents có agent chính điều phối; Handoffs thì các agent ngang hàng trao quyền
-- [04-05 Router](./04-05-router.md) — router giữ trạng thái thì tài liệu khuyên cân nhắc Handoffs thay thế
-- Middleware, `wrap_model_call`: [03-03](../03-agent-harness/03-03-middleware-overview.md)
-- Tool, `ToolRuntime`: [03-02](../03-agent-harness/03-02-tools.md)
+- [06-01 Tổng quan](./06-01-overview.md) — Handoffs đối chiếu bốn pattern còn lại (chú ý: kém khi cần chạy song song nhiều mảng)
+- [06-02 Subagents](./06-02-subagents.md) — khác biệt: Subagents có agent chính điều phối; Handoffs thì các agent ngang hàng trao quyền
+- [06-05 Router](./06-05-router.md) — router giữ trạng thái thì tài liệu khuyên cân nhắc Handoffs thay thế
+- Middleware, `wrap_model_call`: [03-03](../03-harness/03-03-middleware/03-03-middleware-overview.md)
+- Tool, `ToolRuntime`: [03-02](../03-harness/03-02-tools.md)
 - `Command`, `Command.PARENT`, `StateGraph`, `ToolMessage`: tài liệu LangGraph — `docs.langchain.com/oss/python/langgraph/`
 
 

@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./04-01-multi-agent-overview.md
-  - ./04-05-router.md
+  - ./06-01-overview.md
+  - ./06-05-router.md
 ---
 
 # Custom workflow (`StateGraph` tự dựng)
 
 > Pattern trong đó bạn tự định nghĩa luồng chạy riêng bằng LangGraph, toàn quyền với cấu trúc đồ thị: bước tuần tự, rẽ nhánh có điều kiện, vòng lặp, chạy song song.
-> Là pattern "thoát hiểm" khi bốn pattern chuẩn (Subagents, Handoffs, Skills, Router) không vừa — [Router](./04-05-router.md) chính là một ví dụ của custom workflow.
+> Là pattern "thoát hiểm" khi bốn pattern chuẩn (Subagents, Handoffs, Skills, Router) không vừa — [Router](./06-05-router.md) chính là một ví dụ của custom workflow.
 
 ---
 
@@ -143,8 +143,8 @@ agent    → answer = "New York Liberty vô địch WNBA 2024, thắng Minnesota
 
 ## Tham chiếu chéo
 
-- [04-01 Tổng quan](./04-01-multi-agent-overview.md) — custom workflow là pattern nền, nhúng được các pattern khác
-- [04-05 Router](./04-05-router.md) — một ví dụ cụ thể của custom workflow
+- [06-01 Tổng quan](./06-01-overview.md) — custom workflow là pattern nền, nhúng được các pattern khác
+- [06-05 Router](./06-05-router.md) — một ví dụ cụ thể của custom workflow
 - Retrieval / RAG: file retrieval của kho (mục 05, đang hoàn thiện)
 - `StateGraph`, `START`, `END`, `add_node`, `add_edge`, structured output nền đồ thị: tài liệu LangGraph — `docs.langchain.com/oss/python/langgraph/`
-- Agent, `create_agent`: [03-agent-harness](../03-agent-harness/)
+- Agent, `create_agent`: [03-01 Agents](../03-harness/03-01-agents.md)

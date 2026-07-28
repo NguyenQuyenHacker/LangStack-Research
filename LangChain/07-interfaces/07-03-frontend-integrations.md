@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./frontend-overview.md
-  - ./frontend-patterns.md
+  - ./07-01-frontend-overview.md
+  - ./07-02-frontend-patterns.md
 ---
 
 # Frontend integrations
@@ -103,6 +103,6 @@ Cả bốn đều chạy tốt với agent LangChain. Ba cái sau nối thẳng 
 
 ## Tham chiếu chéo
 
-- [frontend-overview.md](./frontend-overview.md) — vì sao `useStream` không phụ thuộc thư viện vẽ
-- [frontend-patterns.md](./frontend-patterns.md) — các mẫu giao diện dựng bằng chính `useStream`
+- [07-01 Frontend — tổng quan](./07-01-frontend-overview.md) — vì sao `useStream` không phụ thuộc thư viện vẽ
+- [07-02 Frontend patterns](./07-02-frontend-patterns.md) — các mẫu giao diện dựng bằng chính `useStream`
 - Các trang chi tiết: `https://docs.langchain.com/oss/python/langchain/frontend/integrations/<tên>` (`copilotkit`, `ai-elements`, `assistant-ui`, `openui`)

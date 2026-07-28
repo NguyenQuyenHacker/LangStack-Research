@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./memory.md
-  - ./long-term-memory.md
+  - ./04-01-memory.md
+  - ./04-03-long-term-memory.md
 ---
 
 # Short-term memory (`checkpointer`)
 
 > Trí nhớ trong phạm vi một thread: agent nhớ được các lượt trước của cùng một cuộc hội thoại, nhưng không mang sang cuộc khác.
-> Vì sao có hai loại trí nhớ và long-term khác gì — xem [memory](./memory.md). Nhớ xuyên cuộc — xem [long-term-memory](./long-term-memory.md).
+> Vì sao có hai loại trí nhớ và long-term khác gì — xem [memory](./04-01-memory.md). Nhớ xuyên cuộc — xem [long-term-memory](./04-03-long-term-memory.md).
 
 ---
 
@@ -60,7 +60,7 @@ You are Bob!                                         ← lượt 2 vẫn nhớ, 
 
 Đây là output lấy nguyên từ tài liệu, không dựng lại. Không có checkpointer thì lượt 2 sẽ không biết tên Bob.
 
-**Quan hệ với long-term memory.** Short-term chết theo thread: đổi `thread_id` là mất sạch. Muốn nhớ xuyên thread, phải dùng long-term ([long-term-memory](./long-term-memory.md)) — lưu vào store thay vì vào state.
+**Quan hệ với long-term memory.** Short-term chết theo thread: đổi `thread_id` là mất sạch. Muốn nhớ xuyên thread, phải dùng long-term ([long-term-memory](./04-03-long-term-memory.md)) — lưu vào store thay vì vào state.
 
 ---
 
@@ -372,6 +372,6 @@ Tài liệu không in kết quả cho ví dụ `after_model` này. Code `before_
 
 ## 8. Tham chiếu chéo
 
-- [memory](./memory.md) — vì sao có hai loại trí nhớ; ba kiểu trí nhớ dài hạn; hai thời điểm ghi.
-- [long-term-memory](./long-term-memory.md) — nhớ xuyên thread bằng store; đối chiếu trực tiếp: ở đây dữ liệu vào **state**, bên đó vào **store**.
+- [memory](./04-01-memory.md) — vì sao có hai loại trí nhớ; ba kiểu trí nhớ dài hạn; hai thời điểm ghi.
+- [long-term-memory](./04-03-long-term-memory.md) — nhớ xuyên thread bằng store; đối chiếu trực tiếp: ở đây dữ liệu vào **state**, bên đó vào **store**.
 - Trang tài liệu khác được nêu tên trong nguồn (chưa nghiên cứu ở đây): middleware (`/oss/python/langchain/middleware`), Tools / `ToolRuntime`, Persistence & checkpointers (`/oss/python/langgraph/checkpointers`), reducers (`/oss/python/langgraph/graph-api#reducers`).

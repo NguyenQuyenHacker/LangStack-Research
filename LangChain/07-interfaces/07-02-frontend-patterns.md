@@ -6,15 +6,15 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./frontend-overview.md
-  - ./frontend-integrations.md
+  - ./07-01-frontend-overview.md
+  - ./07-03-frontend-integrations.md
 ---
 Chi tiết cách triển khai, code base đơn giản tham khảo tại [**Frontend**](https://docs.langchain.com/oss/python/langchain/frontend/)
 # Frontend patterns
 
 > 11 mẫu dựng sẵn cho giao diện agent. Mỗi mẫu là một cách lấy một trạng thái từ `useStream` rồi vẽ theo một nhu cầu cụ thể. File này chỉ trình bày định nghĩa và đặc điểm từng mẫu ở mức lý thuyết; cơ chế và code chi tiết nằm ở trang riêng của từng mẫu.
 
-Kiến trúc chung (agent `create_agent` ở backend + hook `useStream` ở frontend) đã mô tả ở [frontend-overview.md](./frontend-overview.md), không nhắc lại ở đây.
+Kiến trúc chung (agent `create_agent` ở backend + hook `useStream` ở frontend) đã mô tả ở [07-01 Frontend — tổng quan](./07-01-frontend-overview.md), không nhắc lại ở đây.
 
 Tài liệu gom 11 mẫu thành bốn nhóm theo mục đích.
 
@@ -307,6 +307,6 @@ Ba mẫu nên xem là trường hợp đặc biệt, bỏ qua được nếu ứ
 
 ## Tham chiếu chéo
 
-- [frontend-overview.md](./frontend-overview.md) — kiến trúc chung và danh sách trạng thái của `useStream`
-- [frontend-integrations.md](./frontend-integrations.md) — cắm các mẫu này vào thư viện giao diện bên thứ ba
+- [07-01 Frontend — tổng quan](./07-01-frontend-overview.md) — kiến trúc chung và danh sách trạng thái của `useStream`
+- [07-03 Frontend integrations](./07-03-frontend-integrations.md) — cắm các mẫu này vào thư viện giao diện bên thứ ba
 - Các trang chi tiết của từng mẫu: `https://docs.langchain.com/oss/python/langchain/frontend/<tên-mẫu>` (ví dụ `.../tool-calling`, `.../human-in-the-loop`, `.../generative-ui`)

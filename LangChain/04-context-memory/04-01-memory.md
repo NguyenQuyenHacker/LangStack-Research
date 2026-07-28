@@ -6,14 +6,14 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./short-term-memory.md
-  - ./long-term-memory.md
+  - ./04-02-short-term-memory.md
+  - ./04-03-long-term-memory.md
 ---
 
 # Memory — trí nhớ của agent
 
 > Trang khái niệm, không phải trang cài đặt. Nó trả lời "agent có mấy loại trí nhớ và mỗi loại giải quyết chuyện gì", chưa đi vào code.
-> Cách làm short-term nằm ở [short-term-memory](./short-term-memory.md), cách làm long-term nằm ở [long-term-memory](./long-term-memory.md). File này chỉ nêu tên rồi trỏ sang.
+> Cách làm short-term nằm ở [short-term-memory](./04-02-short-term-memory.md), cách làm long-term nằm ở [long-term-memory](./04-03-long-term-memory.md). File này chỉ nêu tên rồi trỏ sang.
 
 ---
 
@@ -40,7 +40,7 @@ Không có đoạn code tổng quan ở đây vì trang khái niệm không đư
 
 Trang khái niệm dừng ở đây với short-term, phần "quản lý lịch sử tin nhắn" (cắt bớt, tóm tắt khi hội thoại quá dài so với context window) chỉ được nêu tên rồi trỏ sang hướng dẫn riêng.
 
-→ Cơ chế đầy đủ và code: [short-term-memory](./short-term-memory.md).
+→ Cơ chế đầy đủ và code: [short-term-memory](./04-02-short-term-memory.md).
 
 ---
 
@@ -167,6 +167,6 @@ Có hai cách chính để agent ghi trí nhớ.
 
 ## 7. Tham chiếu chéo
 
-- [short-term-memory](./short-term-memory.md) — cách làm short-term: checkpointer, state, cắt/xóa/tóm tắt tin nhắn.
-- [long-term-memory](./long-term-memory.md) — cách làm long-term: dựng store, namespace/key, đọc–ghi store trong tool.
+- [short-term-memory](./04-02-short-term-memory.md) — cách làm short-term: checkpointer, state, cắt/xóa/tóm tắt tin nhắn.
+- [long-term-memory](./04-03-long-term-memory.md) — cách làm long-term: dựng store, namespace/key, đọc–ghi store trong tool.
 - Trang tài liệu khác được nêu tên trong nguồn (chưa nghiên cứu ở đây): Context conceptual overview (`/oss/python/concepts/context`), Memory in LangGraph (`/oss/python/langgraph/add-memory`), Persistence / memory store (`/oss/python/langgraph/persistence`).

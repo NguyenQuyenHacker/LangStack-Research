@@ -6,10 +6,10 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./04-01-multi-agent-overview.md
-  - ./04-02-subagents.md
-  - ./04-03-handoffs.md
-  - ./04-06-custom-workflow.md
+  - ./06-01-overview.md
+  - ./06-02-subagents.md
+  - ./06-03-handoffs.md
+  - ./06-06-custom-workflow.md
 ---
 
 # Router (`Command` / `Send` phân phối tới agent)
@@ -123,16 +123,16 @@ conversational_agent = create_agent(
 
 **Khái niệm.** Nếu cần bản thân router nhớ, dùng cơ chế lưu trạng thái để giữ lịch sử tin nhắn. Khi định tuyến tới agent, lấy tin nhắn trước từ trạng thái và chọn lọc đưa vào ngữ cảnh agent — đây là đòn bẩy context engineering.
 
-Cơ chế lưu trạng thái (persistence) thuộc file trí nhớ ngắn hạn ([xem 03-agent-harness](../03-agent-harness/), nếu có), ở đây chỉ nêu tên.
+Cơ chế lưu trạng thái (persistence) thuộc file trí nhớ ngắn hạn ([xem 03-harness](../03-harness/)), ở đây chỉ nêu tên.
 
-**!Note:** Router giữ trạng thái đòi tự quản lý lịch sử. Nếu router đổi agent qua các lượt, hội thoại có thể mất liền mạch khi các agent có giọng/prompt khác nhau. Với gọi song song, phải giữ lịch sử ở cấp router (đầu vào và kết quả đã tổng hợp) rồi dùng lịch sử đó trong logic định tuyến. Tài liệu khuyên cân nhắc [Handoffs](./04-03-handoffs.md) hoặc [Subagents](./04-02-subagents.md) thay thế — cả hai có ngữ nghĩa rõ hơn cho hội thoại nhiều lượt.
+**!Note:** Router giữ trạng thái đòi tự quản lý lịch sử. Nếu router đổi agent qua các lượt, hội thoại có thể mất liền mạch khi các agent có giọng/prompt khác nhau. Với gọi song song, phải giữ lịch sử ở cấp router (đầu vào và kết quả đã tổng hợp) rồi dùng lịch sử đó trong logic định tuyến. Tài liệu khuyên cân nhắc [Handoffs](./06-03-handoffs.md) hoặc [Subagents](./06-02-subagents.md) thay thế — cả hai có ngữ nghĩa rõ hơn cho hội thoại nhiều lượt.
 
 ---
 
 ## Tham chiếu chéo
 
-- [04-01 Tổng quan](./04-01-multi-agent-overview.md) — Router đối chiếu bốn pattern còn lại (chạy song song tốt, không giữ trạng thái)
-- [04-02 Subagents](./04-02-subagents.md) — phân biệt router với supervisor
-- [04-03 Handoffs](./04-03-handoffs.md) — phương án thay khi cần hội thoại nhiều lượt
-- [04-06 Custom workflow](./04-06-custom-workflow.md) — router là một ví dụ của custom workflow
+- [06-01 Tổng quan](./06-01-overview.md) — Router đối chiếu bốn pattern còn lại (chạy song song tốt, không giữ trạng thái)
+- [06-02 Subagents](./06-02-subagents.md) — phân biệt router với supervisor
+- [06-03 Handoffs](./06-03-handoffs.md) — phương án thay khi cần hội thoại nhiều lượt
+- [06-06 Custom workflow](./06-06-custom-workflow.md) — router là một ví dụ của custom workflow
 - `Command`, `Send`, `State`, persistence: tài liệu LangGraph — `docs.langchain.com/oss/python/langgraph/`

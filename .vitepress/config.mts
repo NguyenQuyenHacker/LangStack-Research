@@ -17,7 +17,9 @@ export default defineConfig({
     '**/..md', // file rac ten la "..md"
     'note.md',
     'gitnote.md',
-    'node_modules/**'
+    'node_modules/**',
+    '.prompts/**', // prompt dung vault, khong phai noi dung site
+    '.claude/**' // cau hinh Claude Code
   ],
 
   // README.md cua moi stack lam trang index cua stack do -> /LangChain/ , /LangGraph/ ...

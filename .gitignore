@@ -19,6 +19,12 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 
+# --- Claude Code ---
+# Prompt dung de dung vault, khong phai noi dung vault
+.prompts/
+# Override ca nhan; .claude/settings.json van duoc commit
+.claude/settings.local.json
+
 # --- He dieu hanh / editor ---
 .DS_Store
 Thumbs.db

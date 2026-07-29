@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ../05-persistence/05-02-checkpointers.md
-  - ./07-01-interrupts.md
+  - ../02-persistence/02-02-checkpointers.md
+  - ./04-01-interrupts.md
 ---
 
 # Time travel

@@ -18,5 +18,8 @@ Dùng chung cả ba stack. Mỗi mục: thuật ngữ tiếng Anh, cách hiểu 
 | streaming | Trả kết quả theo dòng, từng phần | giữ EN |
 | observability | Khả năng quan sát: trace, log, metric | giữ EN |
 | durable execution | Chạy bền, khôi phục được sau gián đoạn (thuộc LangGraph) | giữ EN |
+| store | Kho key-value cho trí nhớ dài hạn, tra được xuyên mọi thread (thuộc LangGraph) | giữ EN |
+| namespace | Nhóm mà một item trong store thuộc về, dùng để phân vùng tra cứu | giữ EN |
+| runtime context | Dữ liệu cấu hình/phụ trợ (user_id, store, model...) mà node đọc qua đối tượng `Runtime` lúc chạy | giữ EN |
 
 > Bổ sung thuật ngữ mới ngay khi gặp lần đầu trong lúc viết note, kèm quy ước dịch để cả ba stack dùng nhất quán.

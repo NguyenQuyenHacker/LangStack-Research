@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./03-02-use-functional-api.md
-  - ../02-graph-api/02-01-choosing-apis.md
+  - ./09-02-use-functional-api.md
+  - ../08-graph-api/08-01-choosing-apis.md
 ---
 
 # Functional API

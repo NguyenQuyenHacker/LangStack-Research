@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./02-03-use-graph-api.md
-  - ../04-runtime/04-01-pregel-runtime.md
+  - ./08-03-use-graph-api.md
+  - ../10-runtime/10-01-pregel-runtime.md
 ---
 
 # Graph API

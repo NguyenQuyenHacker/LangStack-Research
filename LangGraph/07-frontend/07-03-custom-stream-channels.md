@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./10-02-graph-execution.md
-  - ../06-streaming/06-02-event-streaming.md
+  - ./07-02-graph-execution.md
+  - ../03-streaming/03-02-event-streaming.md
 ---
 
 # Custom stream channel

@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ../05-persistence/05-02-checkpointers.md
-  - ../02-graph-api/02-02-graph-api.md
+  - ../02-persistence/02-02-checkpointers.md
+  - ../08-graph-api/08-02-graph-api.md
 ---
 
 # Tương thích ngược

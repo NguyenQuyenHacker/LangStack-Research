@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./02-02-graph-api.md
-  - ../04-runtime/04-02-fault-tolerance.md
+  - ./08-02-graph-api.md
+  - ../10-runtime/10-02-fault-tolerance.md
 ---
 
 # Dùng Graph API

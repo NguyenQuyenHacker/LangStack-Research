@@ -7,13 +7,13 @@ status: draft
 lab:
 related:
   - ./01-01-overview.md
-  - ../02-graph-api/02-02-graph-api.md
+  - ../08-graph-api/08-02-graph-api.md
 ---
 
 # Tư duy theo LangGraph
 
 > Trang này không dạy cú pháp của một hàm nào cả. Nó dạy **cách nghĩ** khi dựng một agent: chặt quy trình thành các mảnh nhỏ, cho chúng dùng chung một cuốn sổ, rồi để mỗi mảnh tự quyết đi tiếp đâu.
-> Ví dụ xuyên suốt là một agent xử lý email hỗ trợ khách hàng. Nền tảng cho các file sâu hơn: [Graph API](../02-graph-api/02-02-graph-api.md), và tổng quan ở [01-01](./01-01-overview.md).
+> Ví dụ xuyên suốt là một agent xử lý email hỗ trợ khách hàng. Nền tảng cho các file sâu hơn: [Graph API](../08-graph-api/08-02-graph-api.md), và tổng quan ở [01-01](./01-01-overview.md).
 
 ---
 
@@ -272,7 +272,7 @@ human review interrupt:(Interrupt(...),)   ← graph dừng lại, toàn bộ tr
 Email sent successfully!                    ← sau khi resume, chạy nốt qua send_reply tới END
 ```
 
-Điểm hay: graph có thể dừng ở `interrupt()` rồi *nhiều ngày sau* mới chạy tiếp, nhặt lại đúng chỗ đã dừng, nhờ `thread_id` gom hết trạng thái của hội thoại đó lại một mối. Chi tiết vòng dừng/tiếp ở [03-08](../03-agent-harness/03-08-human-in-the-loop.md); chi tiết `stream_events` ở [02-04](../02-model-layer/02-04-streaming.md).
+Điểm hay: graph có thể dừng ở `interrupt()` rồi *nhiều ngày sau* mới chạy tiếp, nhặt lại đúng chỗ đã dừng, nhờ `thread_id` gom hết trạng thái của hội thoại đó lại một mối. Chi tiết vòng dừng/tiếp ở [04-01](../04-human-in-the-loop/04-01-interrupts.md); chi tiết `stream_events` ở [02-04](../../LangChain/02-model-layer/02-04-streaming.md).
 
 ---
 
@@ -289,8 +289,8 @@ Chia nhỏ không làm chậm hơn. Mặc định LangGraph ghi checkpoint ở n
 ## Tham chiếu chéo
 
 - [01-01 Tổng quan](./01-01-overview.md) — bức tranh lớn LangGraph, đọc trước file này
-- [02-02 Graph API](../02-graph-api/02-02-graph-api.md) — cú pháp đầy đủ của `StateGraph`, `add_node`, `add_edge`, `Command`
-- [03-08 Human-in-the-loop](../03-agent-harness/03-08-human-in-the-loop.md) — cơ chế `interrupt()` và vòng dừng/chạy tiếp (mục 6 và 7 chỉ nêu, không giảng lại)
-- [02-04 Streaming](../02-model-layer/02-04-streaming.md) — `stream_events`, `version="v3"`, `.output`, `.interrupts`
+- [02-02 Graph API](../08-graph-api/08-02-graph-api.md) — cú pháp đầy đủ của `StateGraph`, `add_node`, `add_edge`, `Command`
+- [04-01 Interrupt](../04-human-in-the-loop/04-01-interrupts.md) — cơ chế `interrupt()` và vòng dừng/chạy tiếp (mục 6 và 7 chỉ nêu, không giảng lại)
+- [02-04 Streaming](../../LangChain/02-model-layer/02-04-streaming.md) — `stream_events`, `version="v3"`, `.output`, `.interrupts`
 - Persistence (chưa có file): cơ chế `checkpointer` lưu trạng thái — nguồn `docs.langchain.com/oss/python/langgraph/persistence`
 - Fault tolerance: vòng đời `RetryPolicy`, `timeout=`, mẫu saga/`error_handler` — nguồn `docs.langchain.com/oss/python/langgraph/fault-tolerance`

@@ -7,7 +7,7 @@ status: draft
 lab:
 related:
   - ./01-02-thinking-in-langgraph.md
-  - ../02-graph-api/02-02-graph-api.md
+  - ../08-graph-api/08-02-graph-api.md
 ---
 
 # Workflow và agent
@@ -152,7 +152,7 @@ def get_user_info(runtime: ToolRuntime[Context, State]) -> str:
 ## Tham chiếu chéo
 
 - [01-02 thinking-in-langgraph](./01-02-thinking-in-langgraph.md) — tư duy trạng thái/node làm nền cho mọi dáng ở đây
-- [02-02 graph-api](../02-graph-api/02-02-graph-api.md) — cơ chế `StateGraph`, node, cạnh, cạnh điều kiện, reducer cộng dồn; file này chỉ dùng lại, không giảng
+- [02-02 graph-api](../08-graph-api/08-02-graph-api.md) — cơ chế `StateGraph`, node, cạnh, cạnh điều kiện, reducer cộng dồn; file này chỉ dùng lại, không giảng
 - Tools: `https://docs.langchain.com/oss/python/langchain/tools` — chi tiết `@tool`, `ToolRuntime`
 - Structured output: `https://docs.langchain.com/oss/python/langchain/structured-output` — chi tiết `with_structured_output`
 - Human-in-the-loop / interrupts: `https://docs.langchain.com/oss/python/langgraph/interrupts` — người duyệt thay node chấm ở §3.5

@@ -110,7 +110,7 @@ Xuống thẳng **LangGraph** khi: cần tự vẽ luồng thay vì mượn vòn
 
 - [01-02 — Tư duy theo graph trong LangGraph](./01-02-thinking-in-langgraph.md) — mô hình node/edge/state mà mục 1 chỉ chạm nhẹ
 - [01-03 — Workflow so với Agent](./01-03-workflows-vs-agents.md) — khi nào deterministic, khi nào giao model quyết (mục 2, mục 5)
-- [03-08 — Human-in-the-loop](./03-08-human-in-the-loop.md) — cơ chế interrupt/resume của năng lực HITL (mục 4)
+- [04-01 — Interrupt](../04-human-in-the-loop/04-01-interrupts.md) — cơ chế interrupt/resume của năng lực HITL (mục 4)
 - LangChain agents (`create_agent`): `docs.langchain.com/oss/python/langchain/agents`
 - Trang persistence: `docs.langchain.com/oss/python/langgraph/persistence`
 - Trang interrupts (HITL): `docs.langchain.com/oss/python/langgraph/interrupts`

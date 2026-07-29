@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./10-03-custom-stream-channels.md
-  - ../06-streaming/06-01-streaming.md
+  - ./07-03-custom-stream-channels.md
+  - ../03-streaming/03-01-streaming.md
 ---
 
 # Graph execution trên UI

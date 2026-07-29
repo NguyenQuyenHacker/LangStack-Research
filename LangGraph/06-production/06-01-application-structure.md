@@ -6,8 +6,7 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./09-03-backward-compatibility.md
-  - ../01-foundations/01-04-quickstart.md
+  - ./06-03-backward-compatibility.md
 ---
 
 # Cấu trúc ứng dụng

@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./02-02-graph-api.md
-  - ../03-functional-api/03-01-functional-api.md
+  - ./08-02-graph-api.md
+  - ../09-functional-api/09-01-functional-api.md
 ---
 
 # Chọn giữa Graph API và Functional API

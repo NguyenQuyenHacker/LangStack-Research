@@ -6,9 +6,9 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./03-01-functional-api.md
-  - ../07-human-in-the-loop/07-01-interrupts.md
-  - ../05-persistence/05-04-add-memory.md
+  - ./09-01-functional-api.md
+  - ../04-human-in-the-loop/04-01-interrupts.md
+  - ../02-persistence/02-04-add-memory.md
 ---
 
 # Dùng Functional API

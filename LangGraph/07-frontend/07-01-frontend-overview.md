@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ./10-02-graph-execution.md
-  - ./10-03-custom-stream-channels.md
+  - ./07-02-graph-execution.md
+  - ./07-03-custom-stream-channels.md
 ---
 
 # Frontend — tổng quan

@@ -6,8 +6,8 @@ lc_version: unknown
 status: draft
 lab:
 related:
-  - ../05-persistence/05-02-checkpointers.md
-  - ../06-streaming/06-01-streaming.md
+  - ../02-persistence/02-02-checkpointers.md
+  - ../03-streaming/03-01-streaming.md
 ---
 
 # Subgraph

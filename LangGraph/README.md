@@ -12,47 +12,46 @@ Quy ước viết ở [`../CONVENTIONS.md`](../CONVENTIONS.md). Thuật ngữ �
 - [01-01 Tổng quan LangGraph](01-foundations/01-01-overview.md)
 - [01-02 Tư duy theo LangGraph](01-foundations/01-02-thinking-in-langgraph.md)
 - [01-03 Workflow và agent](01-foundations/01-03-workflows-vs-agents.md)
-- [01-04 Quickstart](01-foundations/01-04-quickstart.md)
 
 ### 02 — Graph API
-- [02-01 Chọn giữa Graph API và Functional API](02-graph-api/02-01-choosing-apis.md)
-- [02-02 Graph API](02-graph-api/02-02-graph-api.md)
-- [02-03 Dùng Graph API](02-graph-api/02-03-use-graph-api.md)
+- [02-01 Chọn giữa Graph API và Functional API](08-graph-api/08-01-choosing-apis.md)
+- [02-02 Graph API](08-graph-api/08-02-graph-api.md)
+- [02-03 Dùng Graph API](08-graph-api/08-03-use-graph-api.md)
 
 ### 03 — Functional API
-- [03-01 Functional API](03-functional-api/03-01-functional-api.md)
-- [03-02 Dùng Functional API](03-functional-api/03-02-use-functional-api.md)
+- [03-01 Functional API](09-functional-api/09-01-functional-api.md)
+- [03-02 Dùng Functional API](09-functional-api/09-02-use-functional-api.md)
 
 ### 04 — Runtime
-- [04-01 Runtime Pregel](04-runtime/04-01-pregel-runtime.md)
-- [04-02 Fault tolerance](04-runtime/04-02-fault-tolerance.md)
+- [04-01 Runtime Pregel](10-runtime/10-01-pregel-runtime.md)
+- [04-02 Fault tolerance](10-runtime/10-02-fault-tolerance.md)
 
 ### 05 — Persistence
-- [05-01 Persistence](05-persistence/05-01-persistence.md)
-- [05-02 Checkpointer](05-persistence/05-02-checkpointers.md)
-- [05-03 Store](05-persistence/05-03-stores.md)
-- [05-04 Nối trí nhớ vào graph](05-persistence/05-04-add-memory.md)
+- [05-01 Persistence](02-persistence/02-01-persistence.md)
+- [05-02 Checkpointer](02-persistence/02-02-checkpointers.md)
+- [05-03 Store](02-persistence/02-03-stores.md)
+- [05-04 Nối trí nhớ vào graph](02-persistence/02-04-add-memory.md)
 
 ### 06 — Streaming
-- [06-01 Streaming mức graph](06-streaming/06-01-streaming.md)
-- [06-02 Event streaming mức graph](06-streaming/06-02-event-streaming.md)
+- [06-01 Streaming mức graph](03-streaming/03-01-streaming.md)
+- [06-02 Event streaming mức graph](03-streaming/03-02-event-streaming.md)
 
 ### 07 — Human-in-the-loop
-- [07-01 Interrupt](07-human-in-the-loop/07-01-interrupts.md)
-- [07-02 Time travel](07-human-in-the-loop/07-02-time-travel.md)
+- [07-01 Interrupt](04-human-in-the-loop/04-01-interrupts.md)
+- [07-02 Time travel](04-human-in-the-loop/04-02-time-travel.md)
 
 ### 08 — Subgraphs
-- [08-01 Subgraph](08-subgraphs/08-01-subgraphs.md)
+- [08-01 Subgraph](05-subgraphs/05-01-subgraphs.md)
 
 ### 09 — Production
-- [09-01 Cấu trúc ứng dụng](09-production/09-01-application-structure.md)
-- [09-02 Test graph](09-production/09-02-test.md)
-- [09-03 Tương thích ngược](09-production/09-03-backward-compatibility.md)
+- [09-01 Cấu trúc ứng dụng](06-production/06-01-application-structure.md)
+- [09-02 Test graph](06-production/06-02-test.md)
+- [09-03 Tương thích ngược](06-production/06-03-backward-compatibility.md)
 
 ### 10 — Frontend
-- [10-01 Frontend — tổng quan](10-frontend/10-01-frontend-overview.md)
-- [10-02 Graph execution trên UI](10-frontend/10-02-graph-execution.md)
-- [10-03 Custom stream channel](10-frontend/10-03-custom-stream-channels.md)
+- [10-01 Frontend — tổng quan](07-frontend/07-01-frontend-overview.md)
+- [10-02 Graph execution trên UI](07-frontend/07-02-graph-execution.md)
+- [10-03 Custom stream channel](07-frontend/07-03-custom-stream-channels.md)
 
 ### assets
 - [`assets/images/`](assets/images/) — screenshot và sơ đồ đã render

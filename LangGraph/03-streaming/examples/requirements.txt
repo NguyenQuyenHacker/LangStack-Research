@@ -1,0 +1,4 @@
+langgraph>=1.1
+langchain-core
+# tùy chọn: chỉ cần khi muốn chạy model thật qua GOOGLE_API_KEY
+langchain-google-genai

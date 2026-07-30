@@ -43,15 +43,15 @@ Quy ước viết ở [`../CONVENTIONS.md`](../CONVENTIONS.md). Thuật ngữ �
 ### 08 — Subgraphs
 - [08-01 Subgraph](05-subgraphs/05-01-subgraphs.md)
 
-### 09 — Production
-- [09-01 Cấu trúc ứng dụng](06-production/06-01-application-structure.md)
-- [09-02 Test graph](06-production/06-02-test.md)
-- [09-03 Tương thích ngược](06-production/06-03-backward-compatibility.md)
+### 09 — Frontend
+- [09-01 Frontend — tổng quan](06-frontend/06-01-frontend-overview.md)
+- [09-02 Graph execution trên UI](06-frontend/06-02-graph-execution.md)
+- [09-03 Custom stream channel](06-frontend/06-03-custom-stream-channels.md)
 
-### 10 — Frontend
-- [10-01 Frontend — tổng quan](07-frontend/07-01-frontend-overview.md)
-- [10-02 Graph execution trên UI](07-frontend/07-02-graph-execution.md)
-- [10-03 Custom stream channel](07-frontend/07-03-custom-stream-channels.md)
+### 10 — Production
+- [10-01 Cấu trúc ứng dụng](07-production/07-01-application-structure.md)
+- [10-02 Test graph](07-production/07-02-test.md)
+- [10-03 Tương thích ngược](07-production/07-03-backward-compatibility.md)
 
 ### assets
 - [`assets/images/`](assets/images/) — screenshot và sơ đồ đã render
@@ -71,8 +71,8 @@ Mọi file hiện là **khung rỗng** — có frontmatter, 7 heading của temp
 | 06 — Streaming | 2 | khung |
 | 07 — Human-in-the-loop | 2 | khung |
 | 08 — Subgraphs | 1 | khung |
-| 09 — Production | 3 | khung |
-| 10 — Frontend | 3 | khung |
+| 09 — Frontend | 3 | khung |
+| 10 — Production | 3 | khung |
 | **Tổng** | **26** | **khung** |
 
 ## Không viết ở nhánh này

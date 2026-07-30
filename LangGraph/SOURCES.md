@@ -124,7 +124,7 @@ Substrate lưu trạng thái. Gộp luôn `add-memory` vào đây — trang đó
 
 - `06-01` → `../../LangChain/02-model-layer/02-04-streaming.md`. Trùng **rất nặng**: file LangChain đã có ba kênh dữ liệu, định dạng v1/v2, `custom` writer, tắt streaming có chọn lọc. LangGraph chỉ viết phần *graph mới có*: `subgraphs=True`, lọc theo node, quan hệ giữa super-step và lần phát dữ liệu.
 - `06-02` → `../../LangChain/02-model-layer/02-05-event-streaming.md`. Khái niệm projection và bảng projection đã ở đó → không lặp. Ở đây viết vòng đời channel, protocol event, và cách dựng projection riêng.
-- `06-02` → `07-03-custom-stream-channels.md` (cùng nhánh, phía client).
+- `06-02` → `06-03-custom-stream-channels.md` (cùng nhánh, phía client).
 
 ---
 
@@ -156,39 +156,39 @@ Substrate lưu trạng thái. Gộp luôn `add-memory` vào đây — trang đó
 
 ---
 
-## 06-production
-
-Chỉ ba trang. `studio`, `ui`, `deploy`, `observability` **không viết** — đã có nguồn chính ở nơi khác.
-
-| File | URL docs | Nội dung trình bày | Ngày truy cập |
-|---|---|---|---|
-| `06-01-application-structure.md` `[stub-nặng]` | [application-structure](https://docs.langchain.com/oss/python/langgraph/application-structure) | Cấu trúc thư mục một app LangGraph, schema `langgraph.json`, khai báo dependency, khai báo graph, biến môi trường | 2026-07-28 |
-| `06-02-test.md` `[stub-nặng]` | [test](https://docs.langchain.com/oss/python/langgraph/test) | Test node và edge riêng lẻ, chạy graph một phần (partial execution) | 2026-07-28 |
-| `06-03-backward-compatibility.md` | [backward-compatibility](https://docs.langchain.com/oss/python/langgraph/backward-compatibility) | Tương thích ngược khi sửa graph đã có checkpoint đang chạy: tương thích kỹ thuật, tương thích nghiệp vụ, vấn đề bất định | 2026-07-28 |
-
-**Tham chiếu chéo**
-
-- `09-01` → `../../LangChain/09-production/09-01-studio.md` mục 4.4 đã trình bày `langgraph.json`. File này chỉ viết phần *cấu trúc app* chưa có ở đó, phần config thì link.
-- `09-02` → `../../LangChain/08-quality/08-01-testing-overview.md`, `08-02-unit-testing.md`. Chiến lược test đã ở đó; ở đây chỉ viết cái đặc thù graph: test một node, chạy tới node X rồi dừng.
-- `09-03` → `02-02-checkpointers.md`, `08-02-graph-api.md` (mục graph migration).
-- **Ngoài phạm vi, chỉ link, không tạo file:** [studio](https://docs.langchain.com/oss/python/langgraph/studio) → `../../LangChain/09-production/09-01-studio.md`; [deploy](https://docs.langchain.com/oss/python/langgraph/deploy) → `../../LangChain/09-production/09-02-deploy.md`; [observability](https://docs.langchain.com/oss/python/langgraph/observability) → `../../LangChain/09-production/09-03-observability-hooks.md` và `../../Langfuse/README.md`; [ui](https://docs.langchain.com/oss/python/langgraph/ui) → `07-01-frontend-overview.md`.
-
----
-
-## 07-frontend
+## 06-frontend
 
 Ba trang này **không** trùng với `LangChain/07-interfaces` ngoài trang overview — `graph-execution` và `custom-stream-channels` là nội dung riêng của LangGraph.
 
 | File | URL docs | Nội dung trình bày | Ngày truy cập |
 |---|---|---|---|
-| `07-01-frontend-overview.md` `[stub-nặng]` | [frontend/overview](https://docs.langchain.com/oss/python/langgraph/frontend/overview) | Kiến trúc client–agent, vì sao stream một graph khác stream một chat | 2026-07-28 |
-| `07-02-graph-execution.md` | [frontend/graph-execution](https://docs.langchain.com/oss/python/langgraph/frontend/graph-execution) | Ánh xạ node → card UI, định tuyến token về đúng node, xác định trạng thái node, thanh tiến trình pipeline, xử lý pipeline động | 2026-07-28 |
-| `07-03-custom-stream-channels.md` | [frontend/custom-stream-channels](https://docs.langchain.com/oss/python/langgraph/frontend/custom-stream-channels) | Custom channel hoạt động ra sao, `useExtension` vs `useChannel`, chọn cái nào | 2026-07-28 |
+| `06-01-frontend-overview.md` `[stub-nặng]` | [frontend/overview](https://docs.langchain.com/oss/python/langgraph/frontend/overview) | Kiến trúc client–agent, vì sao stream một graph khác stream một chat | 2026-07-28 |
+| `06-02-graph-execution.md` | [frontend/graph-execution](https://docs.langchain.com/oss/python/langgraph/frontend/graph-execution) | Ánh xạ node → card UI, định tuyến token về đúng node, xác định trạng thái node, thanh tiến trình pipeline, xử lý pipeline động | 2026-07-28 |
+| `06-03-custom-stream-channels.md` | [frontend/custom-stream-channels](https://docs.langchain.com/oss/python/langgraph/frontend/custom-stream-channels) | Custom channel hoạt động ra sao, `useExtension` vs `useChannel`, chọn cái nào | 2026-07-28 |
 
 **Tham chiếu chéo**
 
-- `10-01` → `../../LangChain/07-interfaces/07-01-frontend-overview.md`. Kiến trúc và `useStream` đã ở đó → stub một đoạn, link, chỉ viết chỗ khác biệt "stream graph ≠ stream chat".
-- `10-02`, `10-03` → `../../LangChain/07-interfaces/07-02-frontend-patterns.md` (đối chiếu xem pattern nào đã có), `03-02-event-streaming.md` (cùng nhánh — phía server của cùng cơ chế).
+- `09-01` → `../../LangChain/07-interfaces/07-01-frontend-overview.md`. Kiến trúc và `useStream` đã ở đó → stub một đoạn, link, chỉ viết chỗ khác biệt "stream graph ≠ stream chat".
+- `09-02`, `09-03` → `../../LangChain/07-interfaces/07-02-frontend-patterns.md` (đối chiếu xem pattern nào đã có), `03-02-event-streaming.md` (cùng nhánh — phía server của cùng cơ chế).
+
+---
+
+## 07-production
+
+Chỉ ba trang. `studio`, `ui`, `deploy`, `observability` **không viết** — đã có nguồn chính ở nơi khác.
+
+| File | URL docs | Nội dung trình bày | Ngày truy cập |
+|---|---|---|---|
+| `07-01-application-structure.md` `[stub-nặng]` | [application-structure](https://docs.langchain.com/oss/python/langgraph/application-structure) | Cấu trúc thư mục một app LangGraph, schema `langgraph.json`, khai báo dependency, khai báo graph, biến môi trường | 2026-07-28 |
+| `07-02-test.md` `[stub-nặng]` | [test](https://docs.langchain.com/oss/python/langgraph/test) | Test node và edge riêng lẻ, chạy graph một phần (partial execution) | 2026-07-28 |
+| `07-03-backward-compatibility.md` | [backward-compatibility](https://docs.langchain.com/oss/python/langgraph/backward-compatibility) | Tương thích ngược khi sửa graph đã có checkpoint đang chạy: tương thích kỹ thuật, tương thích nghiệp vụ, vấn đề bất định | 2026-07-28 |
+
+**Tham chiếu chéo**
+
+- `10-01` → `../../LangChain/09-production/09-01-studio.md` mục 4.4 đã trình bày `langgraph.json`. File này chỉ viết phần *cấu trúc app* chưa có ở đó, phần config thì link.
+- `10-02` → `../../LangChain/08-quality/08-01-testing-overview.md`, `08-02-unit-testing.md`. Chiến lược test đã ở đó; ở đây chỉ viết cái đặc thù graph: test một node, chạy tới node X rồi dừng.
+- `10-03` → `02-02-checkpointers.md`, `08-02-graph-api.md` (mục graph migration).
+- **Ngoài phạm vi, chỉ link, không tạo file:** [studio](https://docs.langchain.com/oss/python/langgraph/studio) → `../../LangChain/09-production/09-01-studio.md`; [deploy](https://docs.langchain.com/oss/python/langgraph/deploy) → `../../LangChain/09-production/09-02-deploy.md`; [observability](https://docs.langchain.com/oss/python/langgraph/observability) → `../../LangChain/09-production/09-03-observability-hooks.md` và `../../Langfuse/README.md`; [ui](https://docs.langchain.com/oss/python/langgraph/ui) → `06-01-frontend-overview.md`.
 
 ---
 

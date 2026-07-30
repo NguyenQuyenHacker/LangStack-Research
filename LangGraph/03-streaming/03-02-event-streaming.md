@@ -7,13 +7,13 @@ status: draft
 lab:
 related:
   - ./03-01-streaming.md
-  - ../07-frontend/07-03-custom-stream-channels.md
+  - ../06-frontend/06-03-custom-stream-channels.md
 ---
 
 # Event streaming mức graph (`graph.stream_events`)
 
 > Cách LangGraph khuyến nghị để đọc dữ liệu chảy ra từ một lần chạy graph: một luồng sự kiện duy nhất, phơi ra thành nhiều "khung nhìn" (projection) có kiểu rõ ràng, nhiều bên đọc song song không giẫm chân nhau.
-> Nó đứng **trên** streaming thô ([03-01](./03-01-streaming.md)); phần tự viết projection nằm ở [07-03](../07-frontend/07-03-custom-stream-channels.md).
+> Nó đứng **trên** streaming thô ([03-01](./03-01-streaming.md)); phần tự viết projection nằm ở [06-03](../06-frontend/06-03-custom-stream-channels.md).
 
 ---
 
@@ -55,18 +55,34 @@ The                                                        ← token đầu, in 
 
 LangGraph cung cấp sẵn trọn bộ Event Streaming Pipeline này, tự động chuyển dữ liệu thô phức tạp thành các dòng sự kiện sạch sẽ (`stream.messages`, `stream.values`...), nhờ đó ta chỉ cần tập trung viết code ứng dụng mà không tốn công bóc tách dữ liệu thủ công.
 
-```mermaid
-flowchart TD
-    A["Pregel engine<br/>Thực thi các bước trong Graph"]
-    B["Raw Pregel events<br/>updates · values · messages · custom<br/>checkpoints · tasks · debug"]
-    C["Event router<br/>Điều hướng qua transformer pipeline"]
-    D["Stream transformers<br/>ValuesTransformer · MessagesTransformer · Custom"]
-    E["Event Stream<br/>stream.messages · stream.values ..."]
-
-    A -->|xả sự kiện thô| B
-    B -->|đưa vào| C
-    C -->|đẩy qua| D
-    D -->|chiếu ra| E
+```text
+┌────────────────────────────────────────────────┐
+│  Pregel engine — thực thi các bước trong Graph │
+└────────────────────────────────────────────────┘
+                      │ xả sự kiện thô
+                      ▼
+┌────────────────────────────────────────────────┐
+│  Raw Pregel events                             │
+│  updates · values · messages · custom          │
+│  checkpoints · tasks · debug                   │
+└────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────────────┐
+│  Event router — điều hướng qua pipeline        │
+└────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌───────────────────────────────────────────────┐
+│  Stream transformers                          │
+│  ValuesTransformer · MessagesTransformer      │
+│  Custom transformers                          │
+└───────────────────────────────────────────────┘
+                      │ chiếu ra projection
+                      ▼
+┌────────────────────────────────────────────────┐
+│  Event Stream — stream.messages, stream.values │
+└────────────────────────────────────────────────┘
 ```
 
 **Diễn giải từng chặng:**
@@ -82,192 +98,61 @@ flowchart TD
 
 ## 3. Các projection có sẵn — đọc dữ liệu gì bằng cái gì
 
-Đây là bảng tra cứu lõi. Tất cả đều đọc trên cùng một run stream, đọc song song được.
+Tất cả projection đều đọc trên **cùng một** run stream và đọc song song được. Khác nhau ở chỗ mỗi cái chiếu ra một loại dữ liệu riêng, phục vụ một nhu cầu riêng. Bảng dưới đọc theo ba trục: nó là gì, dùng để làm gì, và khi nào mới cần tới.
 
-| Projection | Lấy ra cái gì |
-|---|---|
-| `stream` | Lặp qua **mọi** sự kiện giao thức (mức thô nhất của event streaming). |
-| `stream.messages` | Chữ của chat model: token, reasoning, tool-call chunk. |
-| `stream.values` | Ảnh chụp state sau từng bước; và đợi giá trị cuối. |
-| `stream.output` | Đợi lấy **kết quả cuối** của run. |
-| `stream.subgraphs` | Phát hiện và quan sát các graph con lồng nhau. |
-| `stream.interrupts` | Xem payload của các điểm dừng chờ người (human-in-the-loop). |
-| `stream.interrupted` | Kiểm tra run có đang dừng chờ người nhập hay không. |
-| `stream.extensions` | Đọc projection do transformer tự viết tạo ra. |
+| Projection | Là gì / lấy ra cái gì | Khi nào dùng tới |
+|---|---|---|
+| `stream.messages` | Chữ của chat model, tách nhỏ theo token; kèm reasoning và mảnh tham số tool-call. | **Dùng thường xuyên nhất.** Bất cứ khi nào cần hiện câu trả lời gõ dần lên UI (kiểu ChatGPT). |
+| `stream.output` | Chỉ mỗi **kết quả cuối** của run, đợi tới khi chạy xong mới có. | **Dùng thường xuyên.** Khi chỉ cần đáp án cuối, không quan tâm quá trình. |
+| `stream.values` | **Ảnh chụp toàn bộ state** sau mỗi bước graph. | Khi cần theo dõi state đổi qua từng bước — debug, hiện tiến trình, ghi log trung gian. |
+| `stream.subgraphs` | Hoạt động của các graph con lồng nhau, đã bóc sẵn tên và đường dẫn. | Khi graph có subgraph / hệ multi-agent, muốn biết con nào đang chạy và nó nhả gì. |
+| `stream.interrupted` | Một cờ đúng/sai: run có đang dừng chờ người nhập không. | Khi có bước duyệt tay — dùng để rẽ nhánh "có dừng thì xử lý resume". |
+| `stream.interrupts` | Payload của điểm dừng: graph đang hỏi gì, chờ quyết định gì. | Đi kèm `interrupted` — để hiện cho người dùng nội dung cần duyệt. |
+| `stream` | Bản thân đối tượng run stream; lặp nó ra **mọi** sự kiện giao thức thô. | Chỉ khi các projection có sẵn không đủ, cần tự lọc sự kiện ở mức thấp nhất (xem 4.6). |
+| `stream.extensions` | Các projection **do transformer tự viết** tạo ra. | Chỉ khi ta đã viết transformer riêng (xem mục 6). |
 
-Cái dùng thường xuyên nhất là `stream.messages` (hiện chữ lên UI) và `stream.output` (lấy kết quả cuối). `stream` thô và `stream.extensions` chỉ cần khi ta có nhu cầu đặc biệt — có thể bỏ qua ở lần đọc đầu.
+Nắm hai dòng đầu là chạy được phần lớn việc: `stream.messages` để hiện chữ, `stream.output` để lấy kết quả. Bốn dòng giữa cho nhu cầu cụ thể hơn. Hai dòng cuối (`stream` thô, `stream.extensions`) là trường hợp đặc biệt.
 
 ---
 
 ## 4. Cách lấy từng loại dữ liệu
 
-> **Về các khối kết quả in ra.** Trang tài liệu gốc không in kết quả mẫu cho ví dụ nào. Các khối "Kết quả" dưới đây tôi tự dựng lại từ mô tả cấu trúc dữ liệu, gắn nhãn (dựng lại). Cần đối chiếu khi chạy thử.
 
 ### 4.1 Lấy chữ của model — `stream.messages`
+⎘ [docs …#stream-messages](https://docs.langchain.com/oss/python/langgraph/event-streaming#stream-messages)
 
-`stream.messages` mô hình hóa đầu ra của model thành từng **message**, mỗi message có `.text`, `.reasoning`, `.tool_calls`, và metadata.
-
-```python
-stream = graph.stream_events(input, version="v3")
-
-for message in stream.messages:
-    text = str(message.text)                     # str() gom cả câu; lặp message.text thì được từng token
-    usage = message.output.usage_metadata        # số token tiêu thụ, có ở message hoàn chỉnh
-    print(text)
-    print(usage)
-```
-
-`message.text` lặp được trong code đồng bộ: lặp thì ra token-một, `str(...)` thì ra cả câu. Ngoài text còn `message.reasoning` (mảnh suy luận của model) và `message.tool_calls` (mảnh tham số của lời gọi tool).
-
-**!Note:** Nếu cần **text, reasoning và tool-call chunk đúng thứ tự chúng đến**, đừng đọc ba projection riêng rồi tự ghép — thứ tự sẽ sai một cách âm thầm (không lỗi, chỉ lệch nhịp). Phải lặp thẳng sự kiện thô của luồng message để giữ đúng trình tự.
+Tách đầu ra model thành từng message. Mỗi message có `.text` (lặp ra token-một, hoặc `str(.text)` lấy cả câu), `.reasoning` (mảnh suy luận), `.tool_calls` (mảnh tham số tool), và `.output.usage_metadata` (số token). Cần **text + reasoning + tool-call đúng thứ tự đến** thì phải lặp sự kiện thô, đừng đọc ba cái riêng rồi ghép — thứ tự sẽ lệch âm thầm.
 
 ### 4.2 Lấy state và kết quả cuối — `stream.values` + `stream.output`
+⎘ [docs …#stream-state](https://docs.langchain.com/oss/python/langgraph/event-streaming#stream-state)
 
-`stream.values` cho **ảnh chụp toàn bộ state** sau mỗi bước; `stream.output` cho **giá trị cuối cùng**.
-
-```python
-stream = graph.stream_events(input, version="v3")
-
-for snapshot in stream.values:                   # mỗi bước graph xong là một ảnh chụp state đầy đủ
-    print(snapshot)
-
-final_state = stream.output                       # đợi tới khi run kết thúc, lấy state cuối
-```
+`stream.values` cho ảnh chụp toàn bộ state sau mỗi bước; `stream.output` đợi lấy state cuối khi run kết thúc.
 
 ### 4.3 Quan sát graph con — `stream.subgraphs`
+⎘ [docs …#stream-subgraphs](https://docs.langchain.com/oss/python/langgraph/event-streaming#stream-subgraphs)
 
-Khi graph có graph con lồng bên trong, `stream.subgraphs` cho ta theo dõi việc của chúng **mà không phải tự bóc chuỗi namespace**.
+Theo dõi graph con lồng nhau qua `subgraph.graph_name`, `subgraph.path`, `subgraph.messages` — đã bóc sẵn, không phải tự phân tích chuỗi namespace.
 
-```python
-stream = graph.stream_events(input, version="v3")
+### 4.4 Đọc nhiều projection đúng thứ tự — `stream.interleave`
+⎘ [docs …#stream-multiple-projections](https://docs.langchain.com/oss/python/langgraph/event-streaming#stream-multiple-projections)
 
-for subgraph in stream.subgraphs:
-    print(subgraph.graph_name, subgraph.path)     # tên graph con và đường dẫn của nó trong cây
-    for message in subgraph.messages:             # mỗi graph con lại có luồng message riêng
-        print(message.text)
-```
-
-**Kết quả in ra** (dựng lại):
-
-```
-researcher ['researcher:6f4d']                    ← graph con tên researcher, đường dẫn một tầng
-Searching for company filings...                  ← chữ do model bên trong graph con đó nhả ra
-```
-
-### 4.4 Đọc nhiều projection đúng thứ tự đến — `stream.interleave`
-
-Muốn trộn nhiều projection lại và nhận đúng thứ tự thời gian chúng xuất hiện, dùng `stream.interleave(...)` (code đồng bộ):
-
-```python
-for name, item in stream.interleave("values", "messages", "subgraphs"):
-    if name == "values":
-        print(f"[state] keys={list(item)}")
-    elif name == "messages":
-        print(f"[llm] node={item.node}")
-    elif name == "subgraphs":
-        print(f"[subgraph] path={item.path}")
-```
-
-Mỗi vòng lặp trả về cặp `(name, item)`: `name` cho biết item đến từ projection nào, `item` là dữ liệu của projection đó.
+`stream.interleave("values", "messages", ...)` trộn nhiều projection, mỗi vòng trả cặp `(name, item)` đúng thứ tự thời gian chúng đến — `name` cho biết item thuộc projection nào.
 
 ### 4.5 Dừng chờ người và chạy tiếp — interrupt & resume
+⎘ [docs …#resume-after-an-interrupt](https://docs.langchain.com/oss/python/langgraph/event-streaming#resume-after-an-interrupt)
 
-Khi graph dừng chờ người nhập, kiểm tra `stream.interrupted` và đọc payload ở `stream.interrupts`, rồi chạy tiếp bằng cách **gọi lại** `stream_events(..., version="v3")` với một `Command`.
-
-```python
-from langgraph.types import Command
-
-stream = graph.stream_events(input, version="v3")
-for message in stream.messages:
-    print(message.text)
-
-if stream.interrupted:                             # run có dừng chờ người không
-    print(stream.interrupts)                       # xem nó đang hỏi gì
-
-stream = graph.stream_events(                       # chạy tiếp: gọi lại chính stream_events
-    Command(resume={"decisions": [{"type": "approve"}]}),
-    version="v3",
-)
-final_state = stream.output
-```
-
-**!Note:** Resume chỉ chạy được khi graph được compile kèm **checkpointer** và config mang **thread ID**. Thiếu một trong hai thì không có chỗ để nối lại trạng thái đã dừng — xem [persistence]. Đây là điều kiện của cơ chế dừng/tiếp, không phải của riêng event streaming.
+Graph dừng chờ người: kiểm tra `stream.interrupted`, đọc `stream.interrupts` xem nó hỏi gì, rồi gọi lại `stream_events(...)` với `Command(resume=...)` để chạy tiếp. Chỉ chạy được khi graph compile kèm **checkpointer** và config mang **thread ID**.
 
 ### 4.6 Lấy toàn bộ sự kiện thô — lặp thẳng `stream`
+⎘ [docs …#stream-all-protocol-events](https://docs.langchain.com/oss/python/langgraph/event-streaming#stream-all-protocol-events)
 
-Khi cần luồng sự kiện giao thức thô (không qua projection nào), lặp thẳng đối tượng `stream`:
-
-```python
-for event in stream:
-    namespace = event["params"]["namespace"]       # đường dẫn tới scope phát ra sự kiện
-    print(namespace, event["method"], event["params"]["data"])
-```
-
-Mỗi sự kiện là một envelope `ProtocolEvent`. Đây cũng chính là hình dạng mà một transformer nhận trong `process(event)`:
-
-```python
-class ProtocolEvent(TypedDict):
-    seq: int                    # tăng nghiêm ngặt trong một run — dùng cái này để sắp thứ tự
-    method: str                 # tên channel: "messages", "values", "updates", "custom", "tools", "lifecycle"...
-    params: ProtocolEventParams
-
-
-class ProtocolEventParams(TypedDict):
-    namespace: list[str]        # đường dẫn "<name>:<runtime_id>" từ graph gốc; [] là gốc
-    timestamp: int              # mili-giây đồng hồ thực; có thể lệch, đừng dùng để sắp thứ tự
-    data: Any                   # payload tùy channel; hình dạng phụ thuộc method
-```
-
-`namespace` là đường đi từ graph gốc tới nơi phát sự kiện. Gốc là mảng rỗng `[]`. Mỗi lần lồng thêm một tầng thì thêm một đoạn `"name:runtime_id"` — ví dụ một tool chạy trong subgraph trông như `["researcher:6f4d", "tools:91ac"]`. Phần trước dấu `:` là tên graph/node ổn định, phần sau là ID sinh ra theo mỗi lần gọi.
-
-**!Note:** Sắp thứ tự sự kiện thì dùng `seq`, đừng dùng `timestamp` — đồng hồ thực có thể trôi, dẫn tới thứ tự sai mà không hề báo lỗi.
-
----
-
-## 5. Kênh (channel) và vòng đời sự kiện
-
-Mục này chỉ cần khi ta xuống mức sự kiện thô ở [4.6]. Ai chỉ dùng projection có sẵn thì **bỏ qua toàn bộ mục này**.
-
-Sự kiện thô chảy trên các **channel**. Tên channel xuất hiện ở trường `method`; mỗi channel nhả một hình dạng sự kiện riêng.
-
-| Channel | Chứa gì |
-|---|---|
-| `values` | Ảnh chụp state đầy đủ. |
-| `updates` | Delta state theo từng node. |
-| `messages` | Đầu ra model theo từng khối nội dung (content block). |
-| `tools` | Tool bắt đầu, nhả output, kết thúc, lỗi. |
-| `lifecycle` | Đổi trạng thái của run, subgraph, subagent. |
-| `checkpoints` | Envelope checkpoint nhẹ, dùng cho rẽ nhánh và time travel. |
-| `input` | Yêu cầu và phản hồi nhập liệu của con người. |
-| `tasks` | Sự kiện tạo và kết quả của task Pregel. |
-| `custom` | Payload người dùng tự định nghĩa từ trong code graph. |
-| `custom:<name>` | Đầu ra của stream transformer tự viết. |
-
-Các projection có kiểu ở mục 3 chính là được dựng từ những channel này. Ba channel đáng nhớ vì có trạng thái sự kiện riêng:
-
-**`messages`** — mô hình đầu ra thành content block, trường `event` là một trong: `message-start`, `content-block-start`, `content-block-delta`, `content-block-finish`, `message-finish`. Mỗi khối có ranh giới rõ: mở → nhả delta → đóng, xong mới tới khối kế. Nhờ vậy token, khối reasoning, khối tool-call, nội dung đa phương thức đều tường minh mà không cần format riêng của từng nhà cung cấp. `message-finish` có thể kèm số token.
-
-**`tools`** — trường `event` là một trong: `tool-started`, `tool-output-delta`, `tool-finished`, `tool-error`. Các sự kiện tool được khớp với nhau bằng **tool call ID**, nên một lần chạy tool có thể nối ngược về đúng khối tool-call đã sinh ra nó bên channel `messages`.
-
-**`lifecycle`** — trường `event` là một trong: `started`, `running`, `completed`, `failed`, `interrupted`. Ngoài `event`, dữ liệu có thể kèm `graph_name`, `error`, và `cause` — cho biết vì sao một scope con khởi động (do tool cha gọi, do fan-out, do chuyển cạnh).
-
----
-
-## 6. Tự dựng projection riêng
-
-Khi các projection có sẵn không khớp hình dạng ứng dụng cần, ta viết **stream transformer** của riêng mình. Transformer quan sát sự kiện giao thức, giữ state riêng, và phơi ra khung nhìn dẫn xuất — ví dụ tổng số token, hoạt động tool, tiến độ, artifact. Projection tự viết xuất hiện dưới `stream.extensions`.
-
-Bản thân các projection có sẵn (`stream.messages`, `stream.values`...) cũng chính là transformer dùng đúng cơ chế này. LangGraph còn có sẵn `ToolCallTransformer` (`from langgraph.prebuilt import ToolCallTransformer`) — đăng ký nó để có `stream.tool_calls` trên một `StateGraph` thường.
-
-Đăng ký transformer có hai chỗ: truyền vào lúc gọi (`stream_events(..., transformers=[...])`) để thử nghiệm cục bộ, hoặc compile thẳng vào graph (`builder.compile(transformers=[...])`) khi muốn mọi run đều sinh projection đó.
-
-Cơ chế đầy đủ — interface `StreamTransformer` (`init` / `process` / `finalize` / `fail`), `StreamChannel` có tên và không tên, `required_stream_modes`, cách channel đẩy giá trị vào luồng chính — nằm ở [07-03 Custom stream channels](../07-frontend/07-03-custom-stream-channels.md). Chỗ này chỉ nêu tên để không giẫm lên file đó.
+Lặp thẳng `stream` ra mọi `ProtocolEvent` khi projection có sẵn không đủ. Mỗi event có `seq` (**dùng để sắp thứ tự** — không dùng `timestamp` vì đồng hồ có thể trôi), `method` (tên channel), và `params.namespace` (đường dẫn scope phát ra event, gốc là `[]`, mỗi tầng lồng thêm một đoạn `"name:runtime_id"`).
 
 ---
 
 ## Tham chiếu chéo
 
 - [03-01 Streaming](./03-01-streaming.md) — tầng dưới của ngăn xếp: sự kiện thô theo `stream_mode`. Event streaming đứng trên tầng này.
-- [07-03 Custom stream channels](../07-frontend/07-03-custom-stream-channels.md) — chi tiết cơ chế transformer và `StreamChannel` mà mục 6 chỉ nêu tên.
+- [07-03 Custom stream channels](../06-frontend/06-03-custom-stream-channels.md) — chi tiết cơ chế transformer và `StreamChannel` mà mục 6 chỉ nêu tên.
 - Trang tài liệu gốc: `https://docs.langchain.com/oss/python/langgraph/event-streaming`
 - Sản phẩm liên quan (tài liệu riêng, không thuộc phạm vi file này): LangChain agent streaming, Deep Agents streaming, LangSmith Streaming API cho graph deploy sau Agent Server.

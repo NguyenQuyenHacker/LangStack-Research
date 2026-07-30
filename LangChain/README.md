@@ -2,7 +2,7 @@
 
 Nghiên cứu LangChain v1 (Python) theo docs chính thức `https://docs.langchain.com/oss/python/langchain/`. Viết cho kỹ sư đã biết Python và đã dùng LangChain cơ bản, nhưng chưa nắm cơ chế bên dưới. Cấu trúc thư mục chia theo mô hình khái niệm của v1 — model layer tách khỏi harness, mọi thứ liên quan tới context window gom một chỗ — thay vì bám theo mục lục docs.
 
-Quy ước viết ở [`../CONVENTIONS.md`](../CONVENTIONS.md). Thuật ngữ ở [`../GLOSSARY.md`](../GLOSSARY.md). Ánh xạ nguồn ở [`SOURCES.md`](SOURCES.md).
+Ánh xạ nguồn ở [`SOURCES.md`](SOURCES.md).
 
 ## Mục lục
 

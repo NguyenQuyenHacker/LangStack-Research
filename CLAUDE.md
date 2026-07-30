@@ -4,12 +4,6 @@ Vault VitePress **tiếng Việt** tổng hợp docs OSS của LangChain / LangG
 
 Ba nhánh: `LangChain/` (đã xong), `LangGraph/`, `Langfuse/` (đang làm). Mỗi nhánh có `README.md` (trang index) và `SOURCES.md` (ánh xạ file ↔ URL docs gốc).
 
-## Quy ước nguồn
-
-Quy ước viết note nằm ở [CONVENTIONS.md](CONVENTIONS.md) — template 7 mục, quy ước đặt tên file, quy ước ảnh. Thuật ngữ Anh–Việt ở [GLOSSARY.md](GLOSSARY.md). Không chép lại hai file này vào chỗ khác; sửa thì sửa ở đó.
-
-Khi skill `/research-note-vi` có mặt, dùng nó để viết note. Chưa có thì `CONVENTIONS.md` là nguồn quy trình.
-
 ## Bốn nguyên tắc lõi
 
 - **Trung thực nguồn** — mọi khẳng định phải truy được về trang docs đã fetch → [.claude/rules/fidelity.md](.claude/rules/fidelity.md)

@@ -4,7 +4,7 @@ Nghiên cứu LangGraph (Python) theo docs chính thức `https://docs.langchain
 
 Cấu trúc chia theo tầng cơ chế (API dựng graph → engine chạy → substrate lưu trạng thái → giao diện), không bám mục lục docs.
 
-Quy ước viết ở [`../CONVENTIONS.md`](../CONVENTIONS.md). Thuật ngữ ở [`../GLOSSARY.md`](../GLOSSARY.md). Ánh xạ nguồn và bản đồ chống trùng ở [`SOURCES.md`](SOURCES.md).
+Ánh xạ nguồn và bản đồ chống trùng ở [`SOURCES.md`](SOURCES.md).
 
 ## Mục lục
 

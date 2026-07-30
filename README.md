@@ -32,11 +32,6 @@ npm run docs:dev   # http://localhost:5173
 
 Sidebar sinh tự động từ cây thư mục và `title` trong frontmatter — thêm file note mới là nó tự xuất hiện, không phải sửa config. Cấu hình ở [`.vitepress/config.mts`](.vitepress/config.mts), bộ sinh sidebar ở [`.vitepress/sidebar.mts`](.vitepress/sidebar.mts), style ở [`.vitepress/theme/custom.css`](.vitepress/theme/custom.css).
 
-## Quy ước chung
-
-- [`CONVENTIONS.md`](CONVENTIONS.md) — template note, quy ước đặt tên file và ảnh.
-- [`GLOSSARY.md`](GLOSSARY.md) — thuật ngữ Anh–Việt dùng chung cả ba stack.
-
 ## Ranh giới giữa ba stack
 
 Mỗi khái niệm chỉ có một stack là nguồn chính. Cơ chế state machine, checkpointer, durable execution thuộc `LangGraph/`. Dashboard, dataset, scoring thuộc `Langfuse/`. `LangChain/` chỉ mô tả tới mức API và link sang khi chạm ranh giới.

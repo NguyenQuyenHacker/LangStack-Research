@@ -103,16 +103,3 @@ export function sidebarForStack(stack: string): SidebarItem[] {
 
   return groups
 }
-
-/** Trang chung o root: CONVENTIONS, GLOSSARY */
-export function sidebarShared() {
-  return [
-    {
-      text: 'Quy ước chung',
-      items: [
-        { text: 'Conventions', link: '/CONVENTIONS' },
-        { text: 'Glossary', link: '/GLOSSARY' }
-      ]
-    }
-  ]
-}

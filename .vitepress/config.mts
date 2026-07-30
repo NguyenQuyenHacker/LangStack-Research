@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { sidebarForStack, sidebarShared } from './sidebar.mts'
+import { sidebarForStack } from './sidebar.mts'
 
 export default defineConfig({
   title: 'LangStack Research',
@@ -9,6 +9,12 @@ export default defineConfig({
   // Site chay o https://nguyenquyenhacker.github.io/LangStack-Research/
   // -> moi asset/link phai co tien to ten repo, doi ten repo la phai sua dong nay
   base: '/LangStack-Research/',
+
+  head: [
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap' }]
+  ],
 
   // Toan bo repo la nguon markdown: file .md giu nguyen vi tri,
   // link tuong doi trong repo van chay ca tren GitHub lan tren site.
@@ -44,22 +50,14 @@ export default defineConfig({
     nav: [
       { text: 'LangChain', link: '/LangChain/' },
       { text: 'LangGraph', link: '/LangGraph/' },
-      { text: 'Langfuse', link: '/Langfuse/' },
-      {
-        text: 'Quy ước',
-        items: [
-          { text: 'Conventions', link: '/CONVENTIONS' },
-          { text: 'Glossary', link: '/GLOSSARY' }
-        ]
-      }
+      { text: 'Langfuse', link: '/Langfuse/' }
     ],
 
     // Sidebar sinh tu cay thu muc, khong phai khai bao tay tung file
     sidebar: {
       '/LangChain/': sidebarForStack('LangChain'),
       '/LangGraph/': sidebarForStack('LangGraph'),
-      '/Langfuse/': sidebarForStack('Langfuse'),
-      '/': sidebarShared()
+      '/Langfuse/': sidebarForStack('Langfuse')
     },
 
     search: {

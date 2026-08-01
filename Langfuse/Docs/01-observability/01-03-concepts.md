@@ -114,61 +114,29 @@ Sau khi có trace và observation, ta gắn thêm các attribute để phục v�
 
 ### 4.1. Nền tảng OpenTelemetry
 
-Langfuse xây trên [OpenTelemetry](https://opentelemetry.io/) — chuẩn mở cho telemetry data. Hệ quả thực tế: ta không bị vendor lock-in vào SDK riêng của Langfuse. Có thể gửi trace đồng thời tới nhiều đích — Langfuse cho LLM observability, Datadog cho infrastructure monitoring — mà không phải instrument lại.
+Langfuse được xây dựng trên [OpenTelemetry](https://opentelemetry.io/) (OTel) — một dự án mã nguồn mở do Cloud Native Computing Foundation (CNCF) quản lý. Nó cung cấp các bộ API, SDK và công cụ tiêu chuẩn để thu thập và gửi dữ liệu đo lường từ ứng dụng đến các nền tảng phân tích
 
-Thuật ngữ liên quan: **instrumentation** là quá trình thêm code vào ứng dụng để ghi lại hoạt động. Sau khi instrument, Langfuse (qua OpenTelemetry) tự động capture các sự kiện và tổ chức thành trace/observation.
+Để tạo ra telemetry, ứng dụng cần được **instrument** (thêm hoặc bật khả năng ghi nhận hoạt động). Sau khi instrument, OpenTelemetry sẽ tự động thu thập các sự kiện khi ứng dụng chạy và gửi chúng đến một hoặc nhiều hệ thống quan sát, chẳng hạn như Langfuse.
+
+➤ Một lợi ích lớn của cách làm này là ứng dụng không phụ thuộc vào riêng Langfuse. Cùng một dữ liệu có thể được gửi đến nhiều công cụ khác nhau mà không cần sửa lại phần theo dõi trong ứng dụng.
+
+Ví dụ:
+- Gửi đến Langfuse để xem prompt, phản hồi của mô hình, số token và chi phí.
+- Đồng thời gửi đến Datadog để theo dõi hiệu năng của server như CPU, bộ nhớ và thời gian phản hồi.
 
 ### 4.2. Xử lý bất đồng bộ
 
-Langfuse không gửi trace ngay lập tức khi tạo — làm vậy sẽ block ứng dụng. Thay vào đó, SDK gom trace thành batch ở local rồi gửi nền (background), không ảnh hưởng tới response time.
+Langfuse không gửi trace ngay lập tức khi tạo — làm vậy sẽ khiến ứng dụng chậm lại. Thay vào đó, SDK gom trace thành batch ở local rồi gửi nền (background), không ảnh hưởng tới response time.
 
-Cơ chế này hoạt động tốt với **ứng dụng chạy dài** (web server, API service) vì background exporter có đủ thời gian flush.
+Cách này hoạt động rất tốt với các ứng dụng chạy liên tục, chẳng hạn như web server hoặc API service, vì chúng luôn có thời gian để gửi hết dữ liệu.
 
-Với **ứng dụng chạy ngắn** (script xử lý xong rồi tắt), có rủi ro process tắt trước khi batch kịp gửi. Giải pháp: gọi `flush()` trước khi exit.
+Tuy nhiên, với các chương trình chỉ chạy trong thời gian ngắn (ví dụ một script thực thi xong rồi kết thúc), ứng dụng có thể thoát trước khi dữ liệu kịp được gửi. Vì vậy, trước khi chương trình kết thúc, cần gọi flush() để buộc SDK gửi toàn bộ dữ liệu còn đang chờ.
 
 **!Note:** Quên gọi `flush()` trong ứng dụng short-lived thì trace mất mà không có lỗi, không có cảnh báo — ứng dụng vẫn chạy đúng, chỉ là Langfuse không nhận được dữ liệu. Đây là lỗi im lặng (silent failure) cần lưu tâm khi triển khai.
 
----
 
-## 5. Cách gán observation type trong code
 
-Hai cách phổ biến:
-
-**Python** — dùng decorator `@observe` hoặc context manager:
-
-```python
-from langfuse import observe
-
-@observe(as_type="agent")                    # gán type ngay tại decorator
-def run_agent_workflow(query):
-    return process_with_tools(query)
-
-@observe(as_type="tool")                     # tool call cũng tương tự
-def call_weather_api(location):
-    return weather_service.get_weather(location)
-```
-
-Yêu cầu Python SDK `>= 3.3.1`.
-
-**TypeScript** — dùng `startActiveObservation` hoặc wrapper `observe`:
-
-```typescript
-import { startActiveObservation } from "@langfuse/tracing";
-
-await startActiveObservation(
-  "agent-workflow",
-  async (obs) => {
-    obs.update({ input: { query } });       # ghi input
-    const result = await processWithTools(query);
-    obs.update({ output: result });          # ghi output
-  },
-  { asType: "agent" }                       # gán type qua option
-);
-```
-
-Yêu cầu TypeScript SDK `>= 4.0.0`.
-
-Observation có thể lồng nhau: bên trong một `agent` observation, ta tạo thêm `tool` observation, `generation` observation — cấu trúc cây phản ánh đúng luồng thực thi.
+**!Note** Cơ chế xử lý có thể xem kĩ hơn tại [Background Processing](https://langfuse.com/docs/observability/data-model#background-processing).
 
 ---
 

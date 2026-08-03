@@ -50,6 +50,20 @@ function subDirsIn(dirAbs: string): string[] {
     .sort()
 }
 
+/** File .md va thu muc con trong cung mot thu muc, sap theo ten (tien to so) chung mot day */
+function entriesIn(dirAbs: string): { name: string; isDir: boolean }[] {
+  if (!fs.existsSync(dirAbs)) return []
+  return fs
+    .readdirSync(dirAbs, { withFileTypes: true })
+    .filter(
+      (d) =>
+        (d.isDirectory() && !d.name.startsWith('.') && d.name !== 'assets') ||
+        (d.isFile() && d.name.endsWith('.md') && !IGNORE_FILES.has(d.name))
+    )
+    .map((d) => ({ name: d.name, isDir: d.isDirectory() }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 type SidebarItem = { text: string; link?: string; collapsed?: boolean; items?: SidebarItem[] }
 
 /**
@@ -57,20 +71,23 @@ type SidebarItem = { text: string; link?: string; collapsed?: boolean; items?: S
  * `dirAbs` la duong dan tuyet doi, `urlPrefix` la link URL tuong ung (vd /LangChain/03-harness).
  */
 function itemsForDir(dirAbs: string, urlPrefix: string): SidebarItem[] {
-  const fileItems: SidebarItem[] = mdFilesIn(dirAbs).map((f) => ({
-    text: fileTitle(path.join(dirAbs, f), f),
-    link: `${urlPrefix}/${f.replace(/\.md$/, '')}`
-  }))
+  const items: SidebarItem[] = []
 
-  const dirItems: SidebarItem[] = []
-  for (const sub of subDirsIn(dirAbs)) {
-    const nested = itemsForDir(path.join(dirAbs, sub), `${urlPrefix}/${sub}`)
-    if (nested.length) {
-      dirItems.push({ text: folderLabel(sub), collapsed: true, items: nested })
+  for (const entry of entriesIn(dirAbs)) {
+    if (entry.isDir) {
+      const nested = itemsForDir(path.join(dirAbs, entry.name), `${urlPrefix}/${entry.name}`)
+      if (nested.length) {
+        items.push({ text: folderLabel(entry.name), collapsed: true, items: nested })
+      }
+    } else {
+      items.push({
+        text: fileTitle(path.join(dirAbs, entry.name), entry.name),
+        link: `${urlPrefix}/${entry.name.replace(/\.md$/, '')}`
+      })
     }
   }
 
-  return [...fileItems, ...dirItems]
+  return items
 }
 
 /**

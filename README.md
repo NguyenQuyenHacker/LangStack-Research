@@ -8,7 +8,7 @@ Ba stack nghiên cứu song song về hệ sinh thái LangChain, viết bằng t
 |---|---|---|
 | [`LangChain/`](LangChain/) | Xây agent với `create_agent` + middleware, core components, retrieval, multi-agent, production | Đang viết |
 | [`LangGraph/`](LangGraph/) | State machine, checkpointer, durable execution, orchestration bậc thấp | Chưa bắt đầu |
-| [`Langfuse/`](Langfuse/) | Observability: dashboard, dataset, scoring, tracing | Chưa bắt đầu |
+| [`Langfuse/`](Langfuse/) | Observability: dashboard, dataset, scoring, tracing | Đang viết |
 
 ## Thứ tự đọc đề xuất
 

@@ -39,7 +39,7 @@ const accessed = computed(() => String(meta.value.accessed ?? '').slice(0, 10))
 
 .doc-meta__badge {
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 4px;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 11px;

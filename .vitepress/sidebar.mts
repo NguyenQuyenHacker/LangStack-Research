@@ -100,16 +100,15 @@ export function sidebarForStack(stack: string): SidebarItem[] {
   const groups: SidebarItem[] = []
 
   // File .md nam thang trong thu muc stack (README, SOURCES, ...)
+  // Day thang vao dau sidebar, khong boc trong group rieng — ten stack da hien o nav phia tren roi.
   const rootItems = mdFilesIn(stackAbs).map((f) => ({
-    text: fileTitle(path.join(stackAbs, f), f),
+    text: f === 'SOURCES.md' ? 'Nguồn tham khảo' : fileTitle(path.join(stackAbs, f), f),
     link: `/${stack}/${f.replace(/\.md$/, '')}`
   }))
   if (fs.existsSync(path.join(stackAbs, 'README.md'))) {
     rootItems.unshift({ text: 'Mục lục', link: `/${stack}/` })
   }
-  if (rootItems.length) {
-    groups.push({ text: stack, collapsed: false, items: rootItems })
-  }
+  groups.push(...rootItems)
 
   for (const dir of subDirsIn(stackAbs)) {
     const items = itemsForDir(path.join(stackAbs, dir), `/${stack}/${dir}`)

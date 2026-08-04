@@ -98,7 +98,7 @@ Nếu muốn tìm hiểu thêm hãy tham khảo thông qua https://langfuse.com/
 
 | Yêu cầu | Nội dung |
 |---|---|
-| Prompt dùng được | Biến của prompt trùng key trong input của item (ví dụ `{{question}}` khớp key `"question"`). Prompt chat ánh xạ được placeholder tới key chứa lịch sử hội thoại. |
+| Prompt dùng được | Biến của prompt trùng key trong input của item (ví dụ <code v-pre>{{question}}</code> khớp key `"question"`). Prompt chat ánh xạ được placeholder tới key chứa lịch sử hội thoại. |
 | Dataset dùng được | Input của item là JSON, key JSON khớp biến của prompt. |
 | Kết nối LLM | Phải cấu hình kết nối tới nhà cung cấp model trong cài đặt dự án (prompt chạy thật cho từng item). |
 | Evaluator (tùy chọn) | LLM-as-a-Judge (chấm tiêu chí ngữ nghĩa) hoặc code evaluator (kiểm tra tất định), chấm dựa trên expected output. |

@@ -32,7 +32,7 @@ Quy tắc này không chỉ giúp giao diện gọn gàng — cấu trúc trace 
 
 ## 2. Kiểm tra cấu trúc trace tree
 <div align="center">
-    <img src="../../assets/image/image.png" width="800" align="center">
+    <img src="../assets/image/image.png" width="800" align="center">
 </div>
 
 Khi mở một trace trên UI, ta thấy trace tree — cây phân cấp các observation. Ba điều cần kiểm tra:

@@ -22,11 +22,11 @@ Nhóm bốn tính năng cho phép nội dung, cấu trúc message, hay tham số
 
 ## 1. Variables
 
-**Khái niệm.** Variables là chỗ giữ chỗ cho chuỗi động trong prompt. Khai báo bằng cú pháp `{{variable_name}}`, dùng được cả trong text prompt lẫn trong nội dung bất kỳ message nào của chat prompt. Lúc gọi, truyền giá trị thay thế qua `.compile()` — keyword argument ở Python, một object ở JavaScript/TypeScript — phương thức này thay toàn bộ `{{...}}` bằng giá trị thực tế và trả về prompt đã dựng sẵn để gửi cho model.
+**Khái niệm.** Variables là chỗ giữ chỗ cho chuỗi động trong prompt. Khai báo bằng cú pháp <code v-pre>{{variable_name}}</code>, dùng được cả trong text prompt lẫn trong nội dung bất kỳ message nào của chat prompt. Lúc gọi, truyền giá trị thay thế qua `.compile()` — keyword argument ở Python, một object ở JavaScript/TypeScript — phương thức này thay toàn bộ <code v-pre>{{...}}</code> bằng giá trị thực tế và trả về prompt đã dựng sẵn để gửi cho model.
 
 **Vai trò.** Viết một prompt template dùng lại được cho nhiều lời gọi khác nhau, đổi input không phải sửa định nghĩa prompt gốc mỗi lần.
 
-**Ví dụ.** Prompt `movie-critic` chứa `{{criticLevel}}` và `{{movie}}`; gọi `prompt.compile(criticLevel="expert", movie="Dune 2")` dựng ra `"As an expert movie critic, do you like Dune 2?"`.
+**Ví dụ.** Prompt `movie-critic` chứa <code v-pre>{{criticLevel}}</code> và <code v-pre>{{movie}}</code>; gọi `prompt.compile(criticLevel="expert", movie="Dune 2")` dựng ra `"As an expert movie critic, do you like Dune 2?"`.
 
 Chi tiết cấu hình: https://langfuse.com/docs/prompt-management/features/variables
 
@@ -36,7 +36,7 @@ Chi tiết cấu hình: https://langfuse.com/docs/prompt-management/features/var
 
 **Vai trò.** Dựng chat prompt có phần nội dung là cả một đoạn hội thoại thay đổi theo lượt gọi, điển hình nhất là lịch sử chat.
 
-**Ví dụ.** Prompt `movie-critic-chat` có message `system` chứa `{{criticlevel}}`, tiếp theo là placeholder tên `chat_history`, rồi một message `user` cố định; gọi `prompt.compile(criticlevel="expert", chat_history=[...])` chèn các lượt hội thoại trước đó vào đúng vị trí placeholder.
+**Ví dụ.** Prompt `movie-critic-chat` có message `system` chứa <code v-pre>{{criticlevel}}</code>, tiếp theo là placeholder tên `chat_history`, rồi một message `user` cố định; gọi `prompt.compile(criticlevel="expert", chat_history=[...])` chèn các lượt hội thoại trước đó vào đúng vị trí placeholder.
 
 Chi tiết cấu hình: https://langfuse.com/docs/prompt-management/features/message-placeholders
 
@@ -63,6 +63,6 @@ Chi tiết cấu hình: https://langfuse.com/docs/prompt-management/features/con
 ## Tham chiếu chéo
 
 - Variables và Message Placeholders cùng qua `.compile()` nhưng thay hai thứ khác nhau: Variables thay chuỗi trong một message, Placeholders thay nguyên một mảng message. Một chat prompt dùng cả hai cùng lúc — `.compile(variables, placeholders)` nhận cả hai tham số tách biệt.
-- Composability không đi qua `.compile()`: tham chiếu giải quyết theo version/label ngay ở tag, docs không mô tả bước compile cho nó. Nếu prompt được tham chiếu vào có chứa `{{variable}}` riêng thì variable đó resolve ra sao khi kết hợp — docs không nói rõ, cần kiểm chứng (suy luận).
+- Composability không đi qua `.compile()`: tham chiếu giải quyết theo version/label ngay ở tag, docs không mô tả bước compile cho nó. Nếu prompt được tham chiếu vào có chứa <code v-pre>{{variable}}</code> riêng thì variable đó resolve ra sao khi kết hợp — docs không nói rõ, cần kiểm chứng (suy luận).
 - Config độc lập với ba tính năng còn lại — đọc trực tiếp từ prompt object, không phụ thuộc việc prompt có dùng Variables, Placeholders, hay Composability hay không.
 - Index nhóm feature: [./02-03-00-index.md](./02-03-00-index.md)
